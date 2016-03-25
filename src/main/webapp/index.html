@@ -60,7 +60,7 @@ function getHardinessRatings(callback) {
 
 function sparqlResultsArray(json) {
 	let head = json.head.vars;
-	let data = json.res2ults.bindings;
+	let data = json.results.bindings;
 	let l = [];
 	for(let row of data) {
 		l.push(row[head[0]].value);
