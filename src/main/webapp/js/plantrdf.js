@@ -20,7 +20,14 @@ d3sparql.ask = function(endpoint, sparql, callback) {
 }
 
 function localName(uri) {
-	return uri.substring(uri.lastIndexOf('#')+1);
+	let pos = uri.lastIndexOf('#');
+	if(pos == -1) {
+		pos = uri.lastIndexOf(':');
+	}
+	if(pos == -1) {
+		pos = uri.lastIndexOf('/');
+	}
+	return uri.substring(pos+1);
 }
 
 queries = {
