@@ -195,6 +195,10 @@ function editAction(d, i, j) {
 		case HARDINESS_COL:
 			inputField = form.append("select");
 			break;
+		case PLANT_COL:
+			if(d == "") {
+				d = gardenGraph;
+			}
 		default:
 			inputField = form.append("input").attr("type", "url").attr("value", d).attr("size", d.length);
 	}
