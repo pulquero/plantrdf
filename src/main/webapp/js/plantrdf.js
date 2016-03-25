@@ -26,16 +26,22 @@ function localName(uri) {
 queries = {
 	getPlants: function(graph) {
 		return `
+		prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 		prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 	
 		select
 			?plant
+			(coalesce(?zlabel,'') as ?label)
 			(coalesce(?zprovenance,'') as ?provenance)
 			(coalesce(?zspecies,'') as ?species)
 			(coalesce(?zhardiness,'') as ?hardiness)
 		from <${graph}>
 		where {
 			?plant a p:Plant .
+			optional
+			{
+				?plant rdfs:label ?zlabel .
+			}
 			optional
 			{
 				?plant p:provenance ?zprovenance .

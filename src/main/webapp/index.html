@@ -16,13 +16,15 @@
 <script src="js/plantrdf.js"></script>
 <script>
 const PLANT_TYPE = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
+const LABEL_PROPERTY = "http://www.w3.org/2000/01/rdf-schema#label";
 const PROVENANCE_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#provenance";
 const LSID_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#lsid";
 const HARDINESS_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#hardiness";
 const PLANT_COL = 0;
-const PROVENANCE_COL = 1;
-const SPECIES_COL = 2;
-const HARDINESS_COL = 3;
+const LABEL_COL = 1;
+const PROVENANCE_COL = 2;
+const SPECIES_COL = 3;
+const HARDINESS_COL = 4;
 const EMPTY_PROMISE = new Promise(function(resolve,reject) {resolve();});
 var garden = "mexilandia";
 var queryEndpoint = "http://plantrdf-morethancode.rhcloud.com/openrdf-sesame/repositories/"+garden;
@@ -58,7 +60,7 @@ function getHardinessRatings(callback) {
 
 function sparqlResultsArray(json) {
 	let head = json.head.vars;
-	let data = json.results.bindings;
+	let data = json.res2ults.bindings;
 	let l = [];
 	for(let row of data) {
 		l.push(row[head[0]].value);
@@ -145,6 +147,10 @@ function commitAction(d) {
 					}
 				});
 			});
+			break;
+		case LABEL_COL:
+			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, oldResource, newResource, gardenGraph);
+			update = EMPTY_PROMISE;
 			break;
 		case PROVENANCE_COL:
 			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, oldResource, newResource, gardenGraph);
