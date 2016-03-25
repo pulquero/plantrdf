@@ -196,6 +196,7 @@ function editAction(d, i, j) {
 	var form = cell.append("form").attr("id", "edit_"+i+"_"+j);
 	var inputField;
 	switch(i) {
+		case LABEL_COL:
 		case PROVENANCE_COL:
 			inputField = form.append("input").attr("value", d).attr("size", d.length);
 			break;
