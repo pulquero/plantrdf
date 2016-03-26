@@ -121,73 +121,6 @@ function setEditMode() {
 	d3.selectAll(".edit").style({"display": "block"});
 }
 
-function commitAction(d) {
-	var form = d3.select(this.parentNode);
-	var cell = d3.select(this.parentNode.parentNode);
-	let plant = form.select("#plantField").node().value;
-	var oldResource = d;
-	var newResource = this.value;
-	let formId = form.attr("id");
-	let sep1 = formId.indexOf("_");
-	let sep2 = formId.lastIndexOf("_");
-	let i = parseInt(formId.substring(sep1+1, sep2));
-	let j = parseInt(formId.substring(sep2+1));
-	var updateSparql;
-	let update;
-	switch(i) {
-		case PLANT_COL:
-			updateSparql = queries.replaceResource(oldResource, newResource, PLANT_TYPE, gardenGraph);
-			update = new Promise(function(resolve,reject) {
-				let checkSparql = queries.checkExists(newResource, gardenGraph);
-				d3sparql.ask(queryEndpoint, checkSparql, function(exists) {
-					if(!exists) {
-						resolve();
-					}
-					else {
-						reject(newResource+" already exists!");
-					}
-				});
-			});
-			break;
-		case LABEL_COL:
-			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, oldResource, newResource, gardenGraph);
-			update = EMPTY_PROMISE;
-			break;
-		case PROVENANCE_COL:
-			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, oldResource, newResource, gardenGraph);
-			update = EMPTY_PROMISE;
-			break;
-		case SPECIES_COL:
-			updateSparql = queries.replaceProperty(plant, LSID_PROPERTY, oldResource, newResource, gardenGraph);
-			update = EMPTY_PROMISE;
-			break;
-		case HARDINESS_COL:
-			updateSparql = queries.replaceProperty2(plant, LSID_PROPERTY, HARDINESS_PROPERTY, oldResource, newResource, gardenGraph);
-			update = EMPTY_PROMISE;
-			break;
-		default:
-			return;
-	}
-	update.then(function() {
-		d3sparql.update(updateEndpoint, updateSparql, function() {
-			cell.datum(newResource);
-			cell.html(newResource);
-			let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
-			dataCells.on("click", editAction);
-		});
-	})
-	.catch(function(reason) {
-		alert(reason);
-	});
-}
-
-function cancelAction(d) {
-	var cell = d3.select(this.parentNode.parentNode);
-	cell.html(d);
-	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
-	dataCells.on("click", editAction);
-}
-
 function editAction(d, i, j) {
 	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
 	dataCells.on("click", null);
@@ -257,6 +190,77 @@ function editAction(d, i, j) {
 		inputField.on("blur", cancelAction);
 		inputField.node().focus();
 	});
+}
+
+function commitAction(d) {
+	var form = d3.select(this.parentNode);
+	var cell = d3.select(this.parentNode.parentNode);
+	var row = d3.select(this.parentNode.parentNode.parentNode);
+	let plant = form.select("#plantField").node().value;
+	var oldResource = d;
+	var newResource = this.value;
+	let formId = form.attr("id");
+	let sep1 = formId.indexOf("_");
+	let sep2 = formId.lastIndexOf("_");
+	let i = parseInt(formId.substring(sep1+1, sep2));
+	let j = parseInt(formId.substring(sep2+1));
+	let header = d3.select(resultSelector).select("thead").select("tr").selectAll("th").data();
+	var headerName = header[j];
+	var updateSparql;
+	let update;
+	switch(i) {
+		case PLANT_COL:
+			updateSparql = queries.replaceResource(oldResource, newResource, PLANT_TYPE, gardenGraph);
+			update = new Promise(function(resolve,reject) {
+				let checkSparql = queries.checkExists(newResource, gardenGraph);
+				d3sparql.ask(queryEndpoint, checkSparql, function(exists) {
+					if(!exists) {
+						resolve();
+					}
+					else {
+						reject(newResource+" already exists!");
+					}
+				});
+			});
+			break;
+		case LABEL_COL:
+			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, oldResource, newResource, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		case PROVENANCE_COL:
+			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, oldResource, newResource, gardenGraph);
+			update = EMPTY_PROMISE;
+			provenances = null;
+			break;
+		case SPECIES_COL:
+			updateSparql = queries.replaceProperty(plant, LSID_PROPERTY, oldResource, newResource, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		case HARDINESS_COL:
+			updateSparql = queries.replaceProperty2(plant, LSID_PROPERTY, HARDINESS_PROPERTY, oldResource, newResource, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		default:
+			return;
+	}
+	update.then(function() {
+		d3sparql.update(updateEndpoint, updateSparql, function() {
+			cell.datum(newResource);
+			cell.html(newResource);
+			let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+			dataCells.on("click", editAction);
+		});
+	})
+	.catch(function(reason) {
+		alert(reason);
+	});
+}
+
+function cancelAction(d) {
+	var cell = d3.select(this.parentNode.parentNode);
+	cell.html(d);
+	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+	dataCells.on("click", editAction);
 }
 
 function addNewPlant() {
