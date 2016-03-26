@@ -247,6 +247,7 @@ function commitAction(d) {
 		d3sparql.update(updateEndpoint, updateSparql, function() {
 			cell.datum(newResource);
 			cell.html(newResource);
+			row.datum()[headerName].value = newResource;
 			let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
 			dataCells.on("click", editAction);
 		});
