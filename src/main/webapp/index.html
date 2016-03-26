@@ -205,7 +205,7 @@ function commitAction(d) {
 	let i = parseInt(formId.substring(sep1+1, sep2));
 	let j = parseInt(formId.substring(sep2+1));
 	let header = d3.select(resultSelector).select("thead").select("tr").selectAll("th").data();
-	var headerName = header[j];
+	var headerName = header[i];
 	var updateSparql;
 	let update;
 	switch(i) {
