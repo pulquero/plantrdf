@@ -3,6 +3,7 @@
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" exclude-result-prefixes="rdf">
 
 	<xsl:param name="resource" select="''" />
+	<xsl:param name="graph" select="''" />
 	<xsl:param name="updateEndpoint" select="''" />
 
 	<xsl:template match="/">
@@ -117,14 +118,29 @@
 				<xsl:attribute name="value">
 				<xsl:text>delete {
 </xsl:text>
+<xsl:if test="$graph">
+<xsl:text>graph &lt;</xsl:text><xsl:value-of select="$graph"/><xsl:text>&gt; {
+</xsl:text>
+</xsl:if>
 				<xsl:value-of select="$subject" />
 				<xsl:text> </xsl:text>
 				<xsl:value-of select="$predicate" />
 				<xsl:text> </xsl:text>
 				<xsl:value-of select="$object" />
-				<xsl:text>
-}
-</xsl:text><xsl:text>insert { ?s ?p ?o } where {}</xsl:text>
+<xsl:if test="$graph"><xsl:text>}
+</xsl:text></xsl:if>
+<xsl:text>}
+insert {
+</xsl:text>
+<xsl:if test="$graph">
+<xsl:text>graph &lt;</xsl:text><xsl:value-of select="$graph"/><xsl:text>&gt; {
+</xsl:text>
+</xsl:if>
+<xsl:text>?s ?p ?o</xsl:text>
+<xsl:if test="$graph"><xsl:text>}
+</xsl:text></xsl:if>
+<xsl:text>}
+where {}</xsl:text>
 				</xsl:attribute>
 			</input>
 			<button>Update</button>

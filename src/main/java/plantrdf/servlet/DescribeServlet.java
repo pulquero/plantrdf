@@ -180,6 +180,7 @@ public class DescribeServlet extends HttpServlet {
 				Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
 				t.setParameter("resource", resource);
 				if(editParam) {
+					t.setParameter("graph", sesameRepos+repo);
 					t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
 				}
 				URLConnection describeConn = describeUrl.openConnection();
