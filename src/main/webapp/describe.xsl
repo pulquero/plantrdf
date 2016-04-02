@@ -84,35 +84,27 @@
 
 
 	<xsl:template match="node()" mode="edit">
-		<xsl:variable name="subject">
-			<xsl:value-of select="concat('&lt;', ../@rdf:about, '&gt;')" />
-		</xsl:variable>
-		<xsl:variable name="predicate">
-			<xsl:value-of select="concat('&lt;', namespace-uri(), local-name(), '&gt;')" />
-		</xsl:variable>
-		<xsl:variable name="object">
+		<form action="{$updateEndpoint}">
+			<input name="$s" type="url" size="40" value="{../@rdf:about}" />
+			<input name="$p" type="url" size="40" value="{concat(namespace-uri(), local-name())}" />
 			<xsl:choose>
 				<xsl:when test="@rdf:resource">
-					<xsl:value-of select="concat('&lt;', @rdf:resource, '&gt;')" />
+					<input name="$o" type="url" size="40" value="@rdf:resource" />
 				</xsl:when>
 				<xsl:otherwise>
-					<xsl:value-of select="concat('&quot;&quot;&quot;', text(), '&quot;&quot;&quot;')" />
+					<textarea name="$o" rows="3" cols="40">
+					<xsl:value-of select="text()" />
+					</textarea>
 				</xsl:otherwise>
 			</xsl:choose>
-		</xsl:variable>
-
-		<form action="{$updateEndpoint}">
-			<input name="$s" type="url" value="{$subject}"/>
-			<input name="$p" type="url" value="{$predicate}"/>
-			<input name="$o" value="{$object}"/>
 			<input name="update" type="hidden">
 				<xsl:attribute name="value">
 				<xsl:text>delete { </xsl:text>
-				<xsl:value-of select="$subject"/>
+				<xsl:value-of select="$subject" />
 				<xsl:text> </xsl:text>
-				<xsl:value-of select="$object"/>
+				<xsl:value-of select="$object" />
 				<xsl:text> </xsl:text>
-				<xsl:value-of select="$predicate"/>
+				<xsl:value-of select="$predicate" />
 				<xsl:text> } insert { ?s ?p ?o }</xsl:text>
 				</xsl:attribute>
 			</input>
