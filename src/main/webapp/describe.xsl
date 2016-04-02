@@ -85,15 +85,15 @@
 
 	<xsl:template match="node()" mode="edit">
 		<xsl:variable name="subject">
-			<xsl:value-of select="concat('<', ../@rdf:about, '>')" />
+			<xsl:value-of select="concat('&lt;', ../@rdf:about, '&gt;')" />
 		</xsl:variable>
 		<xsl:variable name="predicate">
-			<xsl:value-of select="concat('<', namespace-uri(), local-name(), '>')" />
+			<xsl:value-of select="concat('&lt;', namespace-uri(), local-name(), '&gt;')" />
 		</xsl:variable>
 		<xsl:variable name="object">
 			<xsl:choose>
 				<xsl:when test="@rdf:resource">
-					<xsl:value-of select="concat('<', @rdf:resource, '>')" />
+					<xsl:value-of select="concat('&lt;', @rdf:resource, '&gt;')" />
 				</xsl:when>
 				<xsl:otherwise>
 					<xsl:value-of select="concat('&quot;&quot;&quot;', text(), '&quot;&quot;&quot;')" />
