@@ -67,7 +67,9 @@ public class DescribeServlet extends HttpServlet {
 		String sesameRepos = "/openrdf-sesame/repositories/";
 		String repo = pathInfo.substring(1, pos);
 
-		boolean isHtml = (req.getParameter("html") != null);
+		boolean htmlParam = (req.getParameter("html") != null);
+		boolean editParam = (req.getParameter("edit") != null);
+		boolean showHtml = htmlParam || editParam;
 		boolean acceptHtml = false;
 		for(Enumeration<String> iter = req.getHeaders("Accept"); iter.hasMoreElements(); ) {
 			if(iter.nextElement().contains("html")) {
@@ -75,7 +77,7 @@ public class DescribeServlet extends HttpServlet {
 				break;
 			}
 		}
-		if(!isHtml && acceptHtml) {
+		if(!showHtml && acceptHtml) {
 			sendRedirect(resp, req.getRequestURL().append("?html").toString());
 			return;
 		}
@@ -152,10 +154,11 @@ public class DescribeServlet extends HttpServlet {
 
 		URL xslUrl = createUrl(req, req.getContextPath()+"/describe.xsl");
 		String describeQuery;
+		String resource = req.getRequestURL().toString();
 		String hashNamespace = req.getRequestURL().append('#').toString();
 		boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 		if(isHashNamespace) {
-			describeQuery = "describe <"+req.getRequestURL()+"> ?s "
+			describeQuery = "describe <"+resource+"> ?s "
 					+ "where {"
 					+ " select distinct ?s "
 					+ " where {"
@@ -165,16 +168,20 @@ public class DescribeServlet extends HttpServlet {
 					+ "}";
 		}
 		else {
-			describeQuery = "describe <"+req.getRequestURL()+">";
+			describeQuery = "describe <"+resource+">";
 		}
 		URL describeUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(describeQuery, "UTF-8"));
 
-		if(isHtml) {
+		if(showHtml) {
 			resp.setContentType("application/xhtml+xml");
 			PASSWORD_AUTH.set(credentials);
 			try {
 				TransformerFactory tf = TransformerFactory.newInstance();
 				Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
+				t.setParameter("resource", resource);
+				if(editParam) {
+					t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
+				}
 				URLConnection describeConn = describeUrl.openConnection();
 				describeConn.setRequestProperty("Accept", "application/rdf+xml");
 				InputStream describeIn = describeConn.getInputStream();
@@ -197,6 +204,9 @@ public class DescribeServlet extends HttpServlet {
 		}
 		else if(!acceptHtml) {
 			sendRedirect(resp, describeUrl.toString());
+		}
+		else {
+			throw new AssertionError("Unreachable");
 		}
 	}
 
