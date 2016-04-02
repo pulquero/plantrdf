@@ -100,7 +100,7 @@
 				</xsl:otherwise>
 			</xsl:choose>
 		</xsl:variable>
-		<form action="{$updateEndpoint}">
+		<form method="post" action="{$updateEndpoint}">
 			<input name="$s" size="40" value="{$subject}" />
 			<input name="$p" size="40" value="{$predicate}" />
 			<xsl:choose>
