@@ -180,7 +180,7 @@ public class DescribeServlet extends HttpServlet {
 				Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
 				t.setParameter("resource", resource);
 				if(editParam) {
-					t.setParameter("graph", createUrl(req, sesameRepos+repo).toString());
+					t.setParameter("graph", "http://plantrdf-morethancode.rhcloud.com/gardens/"+repo);
 					t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
 				}
 				URLConnection describeConn = describeUrl.openConnection();
