@@ -109,19 +109,22 @@
 				</xsl:when>
 				<xsl:otherwise>
 					<textarea name="$o" rows="3" cols="40">
-					<xsl:value-of select="$object" />
+						<xsl:value-of select="$object" />
 					</textarea>
 				</xsl:otherwise>
 			</xsl:choose>
 			<input name="update" type="hidden">
 				<xsl:attribute name="value">
-				<xsl:text>delete { </xsl:text>
+				<xsl:text>delete {
+</xsl:text>
 				<xsl:value-of select="$subject" />
 				<xsl:text> </xsl:text>
 				<xsl:value-of select="$predicate" />
 				<xsl:text> </xsl:text>
 				<xsl:value-of select="$object" />
-				<xsl:text> } insert { ?s ?p ?o }</xsl:text>
+				<xsl:text>
+}
+</xsl:text><xsl:text>insert { ?s ?p ?o } where {}</xsl:text>
 				</xsl:attribute>
 			</input>
 			<button>Update</button>
