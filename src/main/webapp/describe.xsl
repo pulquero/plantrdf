@@ -101,11 +101,11 @@
 			</xsl:choose>
 		</xsl:variable>
 		<form action="{$updateEndpoint}">
-			<input name="$s" type="url" size="40" value="{$subject}" />
-			<input name="$p" type="url" size="40" value="{$predicate}" />
+			<input name="$s" size="40" value="{$subject}" />
+			<input name="$p" size="40" value="{$predicate}" />
 			<xsl:choose>
 				<xsl:when test="@rdf:resource">
-					<input name="$o" type="url" size="40" value="{$object}" />
+					<input name="$o" size="40" value="{$object}" />
 				</xsl:when>
 				<xsl:otherwise>
 					<textarea name="$o" rows="3" cols="40">
