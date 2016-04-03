@@ -55,7 +55,7 @@ queries = {
 			}
 			optional
 			{
-				?plant p:lsid ?zspecies .
+				?plant p:scientificName ?zspecies .
 				optional
 				{
 					?zspecies p:hardiness ?zhardiness .
@@ -199,25 +199,25 @@ queries = {
 		`;
 	},
 
-	replaceProperty: function(subj, pred, oldResource, newResource, graph) {
-		let oldResourceLiteral = this.toLiteral(oldResource);
-		let newResourceLiteral = this.toLiteral(newResource);
-		if(oldResource == '') {
+	replaceProperty: function(subj, pred, type, oldValue, newValue, graph) {
+		let oldSparqlValue = this.toSparqlValue(oldValue, type);
+		let newSparqlValue = this.toSparqlValue(newValue, type);
+		if(oldValue == '') {
 			// insert only
 			return `
 			insert data {
 				graph <${graph}> {
-					<${subj}> <${pred}> ${newResourceLiteral} .
+					<${subj}> <${pred}> ${newSparqlValue} .
 				}
 			}
 			`;
 		}
-		else if(newResource == '') {
+		else if(newValue == '') {
 			// delete only
 			return `
 			delete data {
 				graph <${graph}> {
-					<${subj}> <${pred}> ${oldResourceLiteral} .
+					<${subj}> <${pred}> ${oldSparqlValue} .
 				}
 			}
 			`;
@@ -227,10 +227,10 @@ queries = {
 			return `
 			with <${graph}>
 			delete {
-				<${subj}> <${pred}> ${oldResourceLiteral} .
+				<${subj}> <${pred}> ${oldSparqlValue} .
 			}
 			insert {
-				<${subj}> <${pred}> ${newResourceLiteral} .
+				<${subj}> <${pred}> ${newSparqlValue} .
 			}
 			where {
 			}
@@ -238,25 +238,25 @@ queries = {
 		}
 	},
 
-	replaceProperty2: function(subj, pred1, pred2, oldResource, newResource, graph) {
-		let oldResourceLiteral = this.toLiteral(oldResource);
-		let newResourceLiteral = this.toLiteral(newResource);
-		if(oldResource == '') {
+	replaceProperty2: function(subj, pred1, pred2, type, oldValue, newValue, graph) {
+		let oldSparqlValue = this.toSparqlValue(oldValue, type);
+		let newSparqlValue = this.toSparqlValue(newValue, type);
+		if(oldValue == '') {
 			return `
 			with <${graph}>
 			insert {
-				?o <${pred2}> ${newResourceLiteral} .
+				?o <${pred2}> ${newSparqlValue} .
 			}
 			where {
 				<${subj}> <${pred1}> ?o .
 			}
 			`;
 		}
-		else if(newResource == '') {
+		else if(newValue == '') {
 			return `
 			with <${graph}>
 			delete {
-				?o <${pred2}> ${oldResourceLiteral} .
+				?o <${pred2}> ${oldSparqlValue} .
 			}
 			where {
 				<${subj}> <${pred1}> ?o .
@@ -267,10 +267,10 @@ queries = {
 			return `
 			with <${graph}>
 			delete {
-				?o <${pred2}> ${oldResourceLiteral} .
+				?o <${pred2}> ${oldSparqlValue} .
 			}
 			insert {
-				?o <${pred2}> ${newResourceLiteral} .
+				?o <${pred2}> ${newSparqlValue} .
 			}
 			where {
 				<${subj}> <${pred1}> ?o .
@@ -279,13 +279,18 @@ queries = {
 		}
 	},
 
-	toLiteral: function(resource) {
-		let pos = resource.indexOf(':');
-		if(pos != -1) {
-			return "<"+resource+">";
+	toSparqlValue: function(value, type) {
+		if(type == "uri") {
+			return "<"+value+">";
 		}
-		else {
-			return "\"\"\""+resource+"\"\"\"";
+		else if(type == "literal") {
+			let isUri = value.startsWith("http://") || value.startsWith("urn:");
+			if(isUri) {
+				return "\""+value+"\"^^xsd:anyURI";
+			}
+			else {
+				return "\"\"\""+value+"\"\"\"";
+			}
 		}
 	}
 };

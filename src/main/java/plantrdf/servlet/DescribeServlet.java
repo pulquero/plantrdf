@@ -66,6 +66,7 @@ public class DescribeServlet extends HttpServlet {
 
 		String sesameRepos = "/openrdf-sesame/repositories/";
 		String repo = pathInfo.substring(1, pos);
+		String graph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+repo;
 
 		boolean htmlParam = (req.getParameter("html") != null);
 		boolean editParam = (req.getParameter("edit") != null);
@@ -180,7 +181,7 @@ public class DescribeServlet extends HttpServlet {
 				Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
 				t.setParameter("resource", resource);
 				if(editParam) {
-					t.setParameter("graph", "http://plantrdf-morethancode.rhcloud.com/gardens/"+repo);
+					t.setParameter("graph", graph);
 					t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
 				}
 				URLConnection describeConn = describeUrl.openConnection();

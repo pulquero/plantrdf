@@ -18,7 +18,7 @@
 const PLANT_TYPE = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
 const LABEL_PROPERTY = "http://www.w3.org/2000/01/rdf-schema#label";
 const PROVENANCE_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#provenance";
-const LSID_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#lsid";
+const SCIENTIFIC_NAME_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#scientificName";
 const HARDINESS_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#hardiness";
 const PLANT_COL = 0;
 const LABEL_COL = 1;
@@ -197,8 +197,8 @@ function commitAction(d) {
 	var cell = d3.select(this.parentNode.parentNode);
 	var row = d3.select(this.parentNode.parentNode.parentNode);
 	let plant = form.select("#plantField").node().value;
-	var oldResource = d;
-	var newResource = this.value;
+	var oldValue = d;
+	var newValue = this.value;
 	let formId = form.attr("id");
 	let sep1 = formId.indexOf("_");
 	let sep2 = formId.lastIndexOf("_");
@@ -210,34 +210,34 @@ function commitAction(d) {
 	let update;
 	switch(i) {
 		case PLANT_COL:
-			updateSparql = queries.replaceResource(oldResource, newResource, PLANT_TYPE, gardenGraph);
+			updateSparql = queries.replaceResource(oldValue, newValue, PLANT_TYPE, gardenGraph);
 			update = new Promise(function(resolve,reject) {
-				let checkSparql = queries.checkExists(newResource, gardenGraph);
+				let checkSparql = queries.checkExists(newValue, gardenGraph);
 				d3sparql.ask(queryEndpoint, checkSparql, function(exists) {
 					if(!exists) {
 						resolve();
 					}
 					else {
-						reject(newResource+" already exists!");
+						reject(newValue+" already exists!");
 					}
 				});
 			});
 			break;
 		case LABEL_COL:
-			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, oldResource, newResource, gardenGraph);
+			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, "literal", oldValue, newValue, gardenGraph);
 			update = EMPTY_PROMISE;
 			break;
 		case PROVENANCE_COL:
-			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, oldResource, newResource, gardenGraph);
+			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, "literal", oldValue, newValue, gardenGraph);
 			update = EMPTY_PROMISE;
 			provenances = null;
 			break;
 		case SPECIES_COL:
-			updateSparql = queries.replaceProperty(plant, LSID_PROPERTY, oldResource, newResource, gardenGraph);
+			updateSparql = queries.replaceProperty(plant, SCIENTIFIC_NAME_PROPERTY, "uri", oldValue, newValue, gardenGraph);
 			update = EMPTY_PROMISE;
 			break;
 		case HARDINESS_COL:
-			updateSparql = queries.replaceProperty2(plant, LSID_PROPERTY, HARDINESS_PROPERTY, oldResource, newResource, gardenGraph);
+			updateSparql = queries.replaceProperty2(plant, SCIENTIFIC_NAME_PROPERTY, HARDINESS_PROPERTY, "uri", oldValue, newValue, gardenGraph);
 			update = EMPTY_PROMISE;
 			break;
 		default:
@@ -245,9 +245,9 @@ function commitAction(d) {
 	}
 	update.then(function() {
 		d3sparql.update(updateEndpoint, updateSparql, function() {
-			cell.datum(newResource);
-			cell.html(newResource);
-			row.datum()[headerName].value = newResource;
+			cell.datum(newValue);
+			cell.html(newValue);
+			row.datum()[headerName].value = newValue;
 			let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
 			dataCells.on("click", editAction);
 		});
