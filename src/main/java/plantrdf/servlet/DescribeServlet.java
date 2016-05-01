@@ -73,6 +73,8 @@ public class DescribeServlet extends HttpServlet {
 		String repo = pathInfo.substring(1, pos);
 		String graph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+repo;
 
+		String resource = req.getRequestURL().toString();
+
 		boolean htmlParam = (req.getParameter("html") != null);
 		boolean editParam = (req.getParameter("edit") != null);
 		boolean showHtml = htmlParam || editParam;
@@ -83,146 +85,138 @@ public class DescribeServlet extends HttpServlet {
 				break;
 			}
 		}
-		if(!showHtml && acceptHtml) {
-			String redirectUrl;
-			String askQuery = String.format("ask where {<%s> a <%s>}", req.getRequestURL(), PLANT_CLASS);
-			URL plantStmtUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(askQuery, "UTF-8"));
-			if(Boolean.parseBoolean(plantStmtUrl.getContent().toString())) {
-				redirectUrl = "/observation.html";
-			}
-			else {
-				redirectUrl = req.getRequestURL().append("?html").toString();
-			}
-			sendRedirect(resp, redirectUrl);
-			return;
-		}
 
-		URL namespaceUrl = createUrl(req, sesameRepos+repo+"/namespaces");
-		final Map<String,String> nsMap = new HashMap<String,String>();
 		PASSWORD_AUTH.set(credentials);
 		try {
-			SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-			SAXParser parser = parserFactory.newSAXParser();
-			URLConnection nsConn = namespaceUrl.openConnection();
-			nsConn.setRequestProperty("Accept", "application/sparql-results+xml");
-			InputStream nsIn = nsConn.getInputStream();
+			if(!showHtml && acceptHtml) {
+				String redirectUrl;
+				String askQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
+				URL plantUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(askQuery, "UTF-8"));
+				URLConnection plantConn = plantUrl.openConnection();
+				plantConn.setRequestProperty("Accept", "text/boolean");
+				if(Boolean.parseBoolean(plantConn.getContent().toString())) {
+					redirectUrl = "/observation.html";
+				}
+				else {
+					redirectUrl = req.getRequestURL().append("?html").toString();
+				}
+				sendRedirect(resp, redirectUrl);
+				return;
+			}
+	
+			URL namespaceUrl = createUrl(req, sesameRepos+repo+"/namespaces");
+			final Map<String,String> nsMap = new HashMap<String,String>();
 			try {
-				parser.parse(nsIn, new DefaultHandler() {
-					String name;
-					String prefix;
-					String namespace;
-					StringBuilder buf;
-
-					@Override
-					public void startElement(String uri, String localName, String qName, Attributes attributes)
-							throws SAXException {
-						if("result".equals(qName)) {
-							prefix = null;
-							namespace = null;
-						}
-						else if("binding".equals(qName)) {
-							name = attributes.getValue("name");
-							buf = new StringBuilder();
-						}
-					}
-
-					@Override
-					public void endElement(String uri, String localName, String qName) throws SAXException {
-						if("result".equals(qName)) {
-							nsMap.put(namespace, prefix);
-						}
-						else if("binding".equals(qName)) {
-							String v = buf.toString().trim();
-							if("prefix".equals(name)) {
-								prefix = v;
+				SAXParserFactory parserFactory = SAXParserFactory.newInstance();
+				SAXParser parser = parserFactory.newSAXParser();
+				URLConnection nsConn = namespaceUrl.openConnection();
+				nsConn.setRequestProperty("Accept", "application/sparql-results+xml");
+				try(InputStream nsIn = nsConn.getInputStream()) {
+					parser.parse(nsIn, new DefaultHandler() {
+						String name;
+						String prefix;
+						String namespace;
+						StringBuilder buf;
+	
+						@Override
+						public void startElement(String uri, String localName, String qName, Attributes attributes)
+								throws SAXException {
+							if("result".equals(qName)) {
+								prefix = null;
+								namespace = null;
 							}
-							else if("namespace".equals(name)) {
-								namespace = v;
+							else if("binding".equals(qName)) {
+								name = attributes.getValue("name");
+								buf = new StringBuilder();
 							}
-							name = null;
-							buf = null;
 						}
-					}
+	
+						@Override
+						public void endElement(String uri, String localName, String qName) throws SAXException {
+							if("result".equals(qName)) {
+								nsMap.put(namespace, prefix);
+							}
+							else if("binding".equals(qName)) {
+								String v = buf.toString().trim();
+								if("prefix".equals(name)) {
+									prefix = v;
+								}
+								else if("namespace".equals(name)) {
+									namespace = v;
+								}
+								name = null;
+								buf = null;
+							}
+						}
+	
+						@Override
+						public void characters(char[] ch, int start, int length) throws SAXException {
+							if(buf != null) {
+								buf.append(ch, start, length);
+							}
+						}
+						
+					}, namespaceUrl.toString());
+				}
+			}
+			catch (ParserConfigurationException e) {
+				throw new ServletException(e);
+			}
+			catch (SAXException e) {
+				throw new ServletException(e);
+			}
 
-					@Override
-					public void characters(char[] ch, int start, int length) throws SAXException {
-						if(buf != null) {
-							buf.append(ch, start, length);
-						}
+			URL xslUrl = createUrl(req, "describe.xsl");
+			String describeQuery;
+			String hashNamespace = req.getRequestURL().append('#').toString();
+			boolean isHashNamespace = nsMap.containsKey(hashNamespace);
+			if(isHashNamespace) {
+				describeQuery = String.format("describe <%s> ?s "
+						+ "where {"
+						+ " select distinct ?s "
+						+ " where {"
+						+ "  filter(strstarts(str(?s), \"%s\"))"
+						+ "  ?s ?p ?o ."
+						+ " }"
+						+ "}", resource, hashNamespace);
+			}
+			else {
+				describeQuery = String.format("describe <%s>", resource);
+			}
+			URL describeUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(describeQuery, "UTF-8"));
+	
+			if(showHtml) {
+				resp.setContentType("application/xhtml+xml");
+				try {
+					TransformerFactory tf = TransformerFactory.newInstance();
+					Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
+					t.setParameter("resource", resource);
+					if(editParam) {
+						t.setParameter("graph", graph);
+						t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
 					}
-					
-				}, namespaceUrl.toString());
+					URLConnection describeConn = describeUrl.openConnection();
+					describeConn.setRequestProperty("Accept", "application/rdf+xml");
+					try(InputStream describeIn = describeConn.getInputStream()) {
+						t.transform(new StreamSource(describeIn, describeUrl.toString()), new StreamResult(resp.getOutputStream()));
+					}
+				}
+				catch (TransformerConfigurationException e) {
+					throw new ServletException(e);
+				}
+				catch (TransformerException e) {
+					throw new ServletException(e);
+				}
 			}
-			finally {
-				nsIn.close();
+			else if(!acceptHtml) {
+				sendRedirect(resp, describeUrl.toString());
 			}
-		}
-		catch (ParserConfigurationException e) {
-			throw new ServletException(e);
-		}
-		catch (SAXException e) {
-			throw new ServletException(e);
+			else {
+				throw new AssertionError("Unreachable code");
+			}
 		}
 		finally {
 			PASSWORD_AUTH.remove();
-		}
-
-		URL xslUrl = createUrl(req, "describe.xsl");
-		String describeQuery;
-		String resource = req.getRequestURL().toString();
-		String hashNamespace = req.getRequestURL().append('#').toString();
-		boolean isHashNamespace = nsMap.containsKey(hashNamespace);
-		if(isHashNamespace) {
-			describeQuery = String.format("describe <%s> ?s "
-					+ "where {"
-					+ " select distinct ?s "
-					+ " where {"
-					+ "  filter(strstarts(str(?s), \"%s\"))"
-					+ "  ?s ?p ?o ."
-					+ " }"
-					+ "}", resource, hashNamespace);
-		}
-		else {
-			describeQuery = String.format("describe <%s>", resource);
-		}
-		URL describeUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(describeQuery, "UTF-8"));
-
-		if(showHtml) {
-			resp.setContentType("application/xhtml+xml");
-			PASSWORD_AUTH.set(credentials);
-			try {
-				TransformerFactory tf = TransformerFactory.newInstance();
-				Transformer t = tf.newTransformer(new StreamSource(xslUrl.toString()));
-				t.setParameter("resource", resource);
-				if(editParam) {
-					t.setParameter("graph", graph);
-					t.setParameter("updateEndpoint", sesameRepos+repo+"/statements");
-				}
-				URLConnection describeConn = describeUrl.openConnection();
-				describeConn.setRequestProperty("Accept", "application/rdf+xml");
-				InputStream describeIn = describeConn.getInputStream();
-				try {
-					t.transform(new StreamSource(describeIn, describeUrl.toString()), new StreamResult(resp.getOutputStream()));
-				}
-				finally {
-					describeIn.close();
-				}
-			}
-			catch (TransformerConfigurationException e) {
-				throw new ServletException(e);
-			}
-			catch (TransformerException e) {
-				throw new ServletException(e);
-			}
-			finally {
-				PASSWORD_AUTH.remove();
-			}
-		}
-		else if(!acceptHtml) {
-			sendRedirect(resp, describeUrl.toString());
-		}
-		else {
-			throw new AssertionError("Unreachable");
 		}
 	}
 
