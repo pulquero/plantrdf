@@ -48,11 +48,15 @@ public class DescribeServlet extends HttpServlet {
 
 	private static final ThreadLocal<PasswordAuthentication> PASSWORD_AUTH = new ThreadLocal<PasswordAuthentication>();
 
+	private String sesameUrl;
 	private PasswordAuthentication credentials;
 
 	@Override
 	public void init() throws ServletException {
-		credentials = new PasswordAuthentication("plantrdf", "m3tl".toCharArray());
+		sesameUrl = getInitParameter("sesameUrl");
+		String username = getInitParameter("username");
+		String password = getInitParameter("password");
+		credentials = new PasswordAuthentication(username, password.toCharArray());
 	}
 
 	@Override
@@ -64,7 +68,7 @@ public class DescribeServlet extends HttpServlet {
 			return;
 		}
 
-		String sesameRepos = "/openrdf-sesame/repositories/";
+		String sesameRepos = sesameUrl + "repositories/";
 		String repo = pathInfo.substring(1, pos);
 		String graph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+repo;
 
@@ -153,7 +157,7 @@ public class DescribeServlet extends HttpServlet {
 			PASSWORD_AUTH.remove();
 		}
 
-		URL xslUrl = createUrl(req, req.getContextPath()+"/describe.xsl");
+		URL xslUrl = createUrl(req, "describe.xsl");
 		String describeQuery;
 		String resource = req.getRequestURL().toString();
 		String hashNamespace = req.getRequestURL().append('#').toString();
@@ -213,7 +217,7 @@ public class DescribeServlet extends HttpServlet {
 	}
 
 	private static URL createUrl(HttpServletRequest req, String path) throws MalformedURLException {
-		return new URL(req.getScheme(), req.getServerName(), req.getServerPort(), path);
+		return new URL(new URL(req.getScheme(), req.getServerName(), req.getServerPort(), req.getContextPath()), path);
 	}
 
 	private static void sendRedirect(HttpServletResponse resp, String url) throws IOException {

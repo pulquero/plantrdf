@@ -13,6 +13,7 @@
 </style>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="js/d3sparql.js"></script>
+<script src="js/config.js"></script>
 <script src="js/plantrdf.js"></script>
 <script>
 const PLANT_TYPE = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
@@ -27,8 +28,8 @@ const SPECIES_COL = 3;
 const HARDINESS_COL = 4;
 const EMPTY_PROMISE = new Promise(function(resolve,reject) {resolve();});
 var garden = "mexilandia";
-var queryEndpoint = "http://plantrdf-morethancode.rhcloud.com/openrdf-sesame/repositories/"+garden;
-var updateEndpoint = "http://plantrdf-morethancode.rhcloud.com/openrdf-sesame/repositories/"+garden+"/statements";
+var queryEndpoint = getQueryEndpoint(garden);
+var updateEndpoint = getUpdateEndpoint(garden);
 var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
 const resultSelector = "#result";
 

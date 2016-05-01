@@ -5,7 +5,7 @@ d3sparql.update = function(endpoint, sparql, callback) {
   d3.xhr(url)
   .header("Content-Type", "application/x-www-form-urlencoded")
   .post("update=" + encodeURIComponent(sparql), callback)
-}
+};
 
 d3sparql.ask = function(endpoint, sparql, callback) {
   var url = endpoint + "?query=" + encodeURIComponent(sparql)
@@ -17,6 +17,14 @@ d3sparql.ask = function(endpoint, sparql, callback) {
     if (d3sparql.debug) { console.log(txt) }
     callback(txt == 'true')
   })
+};
+
+function getQueryEndpoint(garden) {
+	return SESAME_URL + "repositories/" + garden;
+}
+
+function getUpdateEndpoint(garden) {
+	return SESAME_URL + "repositories/" + garden + "/statements";
 }
 
 function localName(uri) {
