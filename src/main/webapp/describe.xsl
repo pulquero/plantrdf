@@ -136,7 +136,7 @@ insert {
 <xsl:text>graph &lt;</xsl:text><xsl:value-of select="$graph"/><xsl:text>&gt; {
 </xsl:text>
 </xsl:if>
-<xsl:text>?s ?p ?o</xsl:text>
+<xsl:text>$s $p $o</xsl:text>
 <xsl:if test="$graph"><xsl:text>}
 </xsl:text></xsl:if>
 <xsl:text>}

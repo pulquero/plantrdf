@@ -36,9 +36,10 @@ public class DescribeServlet extends HttpServlet {
 	 */
 	private static final long serialVersionUID = -5798564486501498686L;
 
+	private static final String PLANT_CLASS = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
+
 	static {
 		Authenticator.setDefault(new Authenticator() {
-
 			@Override
 			protected PasswordAuthentication getPasswordAuthentication() {
 				return PASSWORD_AUTH.get();
@@ -83,7 +84,16 @@ public class DescribeServlet extends HttpServlet {
 			}
 		}
 		if(!showHtml && acceptHtml) {
-			sendRedirect(resp, req.getRequestURL().append("?html").toString());
+			String redirectUrl;
+			String askQuery = String.format("ask where {<%s> a <%s>}", req.getRequestURL(), PLANT_CLASS);
+			URL plantStmtUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(askQuery, "UTF-8"));
+			if(Boolean.parseBoolean(plantStmtUrl.getContent().toString())) {
+				redirectUrl = "/observation.html";
+			}
+			else {
+				redirectUrl = req.getRequestURL().append("?html").toString();
+			}
+			sendRedirect(resp, redirectUrl);
 			return;
 		}
 
@@ -163,17 +173,17 @@ public class DescribeServlet extends HttpServlet {
 		String hashNamespace = req.getRequestURL().append('#').toString();
 		boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 		if(isHashNamespace) {
-			describeQuery = "describe <"+resource+"> ?s "
+			describeQuery = String.format("describe <%s> ?s "
 					+ "where {"
 					+ " select distinct ?s "
 					+ " where {"
-					+ "  filter(strstarts(str(?s), \""+hashNamespace+"\"))"
+					+ "  filter(strstarts(str(?s), \"%s\"))"
 					+ "  ?s ?p ?o ."
 					+ " }"
-					+ "}";
+					+ "}", resource, hashNamespace);
 		}
 		else {
-			describeQuery = "describe <"+resource+">";
+			describeQuery = String.format("describe <%s>", resource);
 		}
 		URL describeUrl = createUrl(req, sesameRepos+repo+"?query="+URLEncoder.encode(describeQuery, "UTF-8"));
 
