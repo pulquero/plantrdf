@@ -2,10 +2,52 @@
 <html>
 <head>
 <title>PlantRDF</title>
+<script src="js/config.js">
+</script>
+<script>
+var garden = "mexilandia";
+var updateEndpoint = getUpdateEndpoint(garden);
+var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
+
+var plant = document.referrer;
+document.getElementById("form").action = updateEndpoint;
+document.getElementById("update").value = `
+prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
+
+insert {
+	graph <${graph}> {
+		?obs a p:Observation .
+		?obs p:of ${plant} .
+		?obs p:on ?now .
+		?obs p:width ?w .
+		?obs p:height ?h .
+		?obs p:leafCount $leafCount .
+		?obs p:flowerCount $flowerCount .
+		?obs p:fruitCount $fruitCount .
+		?obs rdfs:label $notes .
+	}
+}
+where {
+	bind(now() as ?now)
+	bind(iri(concat('${plant}', ';date=', ?now)) as ?obs)
+	bind(strdt($width, unit:Centimeter) as ?w)
+	bind(strdt($height, unit:Centimeter) as ?h)
+}
+`;
+</script>
 </head>
 <body>
-<div>
-<button id="submitButton" type="button">Submit</button>
-</div>
+<form id="form" method="post">
+<input id="update" name="update" type="hidden" />
+<input name="width" type="number" />
+<input name="height" type="number" />
+<input name="leafCount" type="number" />
+<input name="flowerCount" type="number" />
+<input name="fruitCount" type="number" />
+<textarea name="notes" rows="3" cols="40">
+</textarea>
+<button type="submit">Submit</button>
+</form>
 </body>
 </html>

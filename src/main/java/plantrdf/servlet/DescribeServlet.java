@@ -77,6 +77,16 @@ public class DescribeServlet extends HttpServlet {
 		poolConfig.setTestWhileIdle(false);
 		parserFactoryPool = new GenericObjectPool<>(new SAXParserFactoryPooledObjectFactory(), poolConfig);
 		transformerFactoryPool = new GenericObjectPool<>(new TransformerFactoryPooledObjectFactory(), poolConfig);
+
+		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
+			@Override
+			public ContentHandler createContentHandler(String mimetype) {
+				if ("text/boolean".equals(mimetype)) {
+					return new BooleanContentHandler();
+				}
+				return null;
+			}
+		});
 	}
 
 	@Override
@@ -110,16 +120,6 @@ public class DescribeServlet extends HttpServlet {
 				break;
 			}
 		}
-
-		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
-			@Override
-			public ContentHandler createContentHandler(String mimetype) {
-				if ("text/boolean".equals(mimetype)) {
-					return new BooleanContentHandler();
-				}
-				return null;
-			}
-		});
 
 		PASSWORD_AUTH.set(credentials);
 		try {
