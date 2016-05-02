@@ -3,6 +3,8 @@ package plantrdf.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
+import java.net.ContentHandler;
+import java.net.ContentHandlerFactory;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
@@ -30,6 +32,10 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import plantrdf.content.text.BooleanContentHandler;
+import plantrdf.util.SAXParserFactoryPooledObjectFactory;
+import plantrdf.util.TransformerFactoryPooledObjectFactory;
 
 public class DescribeServlet extends HttpServlet {
 	/**
@@ -105,6 +111,16 @@ public class DescribeServlet extends HttpServlet {
 			}
 		}
 
+		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
+			@Override
+			public ContentHandler createContentHandler(String mimetype) {
+				if ("text/boolean".equals(mimetype)) {
+					return new BooleanContentHandler();
+				}
+				return null;
+			}
+		});
+
 		PASSWORD_AUTH.set(credentials);
 		try {
 			if (!showHtml && acceptHtml) {
@@ -113,7 +129,7 @@ public class DescribeServlet extends HttpServlet {
 				URL plantUrl = createUrl(req, sesameRepos + repo + "?query=" + URLEncoder.encode(askQuery, "UTF-8"));
 				URLConnection plantConn = plantUrl.openConnection();
 				plantConn.setRequestProperty("Accept", "text/boolean");
-				if (Boolean.parseBoolean(plantConn.getContent().toString())) {
+				if ((Boolean) plantConn.getContent(new Class[] {Boolean.class})) {
 					redirectUrl = "/observation.html";
 				} else {
 					redirectUrl = req.getRequestURL().append("?html").toString();

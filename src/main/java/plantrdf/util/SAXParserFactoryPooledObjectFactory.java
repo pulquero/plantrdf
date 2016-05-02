@@ -1,4 +1,4 @@
-package plantrdf.servlet;
+package plantrdf.util;
 
 import javax.xml.parsers.SAXParserFactory;
 
