@@ -2,6 +2,12 @@
 <html>
 <head>
 <title>PlantRDF</title>
+<style>
+label {
+	display: inline-block;
+	width: 150px
+}
+</style>
 <script src="js/config.js">
 </script>
 <script>
@@ -11,6 +17,7 @@ var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
 
 var plant = document.referrer;
 document.getElementById("form").action = updateEndpoint;
+document.getElementById("plant").value = plant;
 document.getElementById("update").value = `
 prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
@@ -18,7 +25,7 @@ prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
 insert {
 	graph <${graph}> {
 		?obs a p:Observation .
-		?obs p:of ${plant} .
+		?obs p:of $plant .
 		?obs p:on ?now .
 		?obs p:width ?w .
 		?obs p:height ?h .
@@ -38,15 +45,28 @@ where {
 </script>
 </head>
 <body>
+<h1>Observation</h1>
 <form id="form" method="post">
 <input id="update" name="update" type="hidden" />
-<input name="width" type="number" />
-<input name="height" type="number" />
-<input name="leafCount" type="number" />
-<input name="flowerCount" type="number" />
-<input name="fruitCount" type="number" />
+<label for="plant">Plant: </label><input id="plant" name="plant" type="url" />
+<br/>
+<label for="width">Width: </label><input id="width" name="width" type="number" />
+<br/>
+<label for="height">Height: </label><input id="height" name="height" type="number" />
+<br/>
+<label for="leafCount">Leaf count: </label><input id="leafCount" name="leafCount" type="number" />
+<br/>
+<label for="flowerCount">Flower count: </label><input id="flowerCount" name="flowerCount" type="number" />
+<br/>
+<label for="fruitCount">Fruit count: </label><input id="fruitCount" name="fruitCount" type="number" />
+<br/>
+<br/>
+<label>Notes</label>
+<br/>
 <textarea name="notes" rows="3" cols="40">
 </textarea>
+<br/>
+<br/>
 <button type="submit">Submit</button>
 </form>
 </body>
