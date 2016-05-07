@@ -21,7 +21,7 @@ var params = {};
 var queryStr = window.location.search.substring(1);
 for(var es of queryStr.split('&'))
 {
-	var e = e.split('=');
+	var e = es.split('=');
 	params[e[0]] = decodeURIComponent(e[1]);
 }
 var plant = params['plant'];
