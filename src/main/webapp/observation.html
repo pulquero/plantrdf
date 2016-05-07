@@ -40,11 +40,11 @@ function init() {
 				}
 				else if(t == 'number') {
 					if(v.charAt(0) != '"') {
-						e.value = '"' + v + '"^^xsd:integer';
+						e.value = '"' + v + '"^^<http://www.w3.org/2001/XMLSchema#integer>';
 					}
 				}
 				else if(t == 'checkbox') {
-					e.value = '"true"^^xsd:boolean';
+					e.value = '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>';
 				}
 				else if(t == 'text' || t == 'textarea') {
 					if(v.charAt(0) != '"') {
