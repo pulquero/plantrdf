@@ -46,7 +46,7 @@ function init() {
 				else if(t == 'checkbox') {
 					e.value = '"true"^^xsd:boolean';
 				}
-				else {
+				else if(t == 'text' || t == 'textarea') {
 					if(v.charAt(0) != '"') {
 						e.value ='"' + v.replace(/([\\"\n\r\t])/g, '\\$1') + '"';
 					}
