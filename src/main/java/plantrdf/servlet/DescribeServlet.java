@@ -149,7 +149,7 @@ public class DescribeServlet extends HttpServlet {
 			}
 
 			if(obsParam) {
-				doObservation(resource, req, resp);
+				doObservation(graph, resource, req, resp);
 			}
 			else {
 				String contentType;
@@ -165,8 +165,8 @@ public class DescribeServlet extends HttpServlet {
 		}
 	}
 
-	private void doObservation(String resource, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		resp.sendRedirect("/observation.html?"+URLEncoder.encode(resource, "UTF-8"));
+	private void doObservation(String graph, String resource, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+		resp.sendRedirect("/observation.html?graph="+URLEncoder.encode(graph, "UTF-8")+"&plant="+URLEncoder.encode(resource, "UTF-8"));
 	}
 
 	private void doRdf(URL endpoint, String graph, String resource, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException {
