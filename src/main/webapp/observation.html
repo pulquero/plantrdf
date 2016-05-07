@@ -18,36 +18,39 @@ var updateEndpoint = getUpdateEndpoint(garden);
 var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
 
 var plant = window.location.search.substring(1);
-document.getElementById("form").action = updateEndpoint;
-document.getElementById("plant").value = plant;
-document.getElementById("update").value = `
-prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
-prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
 
-insert {
-	graph <${graph}> {
-		?obs a p:Observation .
-		?obs p:of $plant .
-		?obs p:on ?now .
-		?obs p:width ?w .
-		?obs p:height ?h .
-		?obs p:leafCount $leafCount .
-		?obs p:flowerCount $flowerCount .
-		?obs p:fruitCount $fruitCount .
-		?obs p:watered $watered .
-		?obs rdfs:label $notes .
+function init() {
+	document.getElementById("form").action = updateEndpoint;
+	document.getElementById("plant").value = plant;
+	document.getElementById("update").value = `
+	prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+	prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
+
+	insert {
+		graph <${graph}> {
+			?obs a p:Observation .
+			?obs p:of $plant .
+			?obs p:on ?now .
+			?obs p:width ?w .
+			?obs p:height ?h .
+			?obs p:leafCount $leafCount .
+			?obs p:flowerCount $flowerCount .
+			?obs p:fruitCount $fruitCount .
+			?obs p:watered $watered .
+			?obs rdfs:label $notes .
+		}
 	}
+	where {
+		bind(now() as ?now)
+		bind(iri(concat('${plant}', ';date=', ?now)) as ?obs)
+		bind(strdt($width, unit:Centimeter) as ?w)
+		bind(strdt($height, unit:Centimeter) as ?h)
+	}
+	`;
 }
-where {
-	bind(now() as ?now)
-	bind(iri(concat('${plant}', ';date=', ?now)) as ?obs)
-	bind(strdt($width, unit:Centimeter) as ?w)
-	bind(strdt($height, unit:Centimeter) as ?h)
-}
-`;
 </script>
 </head>
-<body>
+<body onload="init()">
 <h1>Observation</h1>
 <form id="form" method="post">
 <input id="update" name="update" type="hidden" />
