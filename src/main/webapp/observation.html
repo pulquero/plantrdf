@@ -17,11 +17,12 @@ var garden = "mexilandia";
 var updateEndpoint = getUpdateEndpoint(garden);
 var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
 
-var plant = window.location.search.substring(1);
+var plant = decodeURIComponent(window.location.search.substring(1));
 
 function init() {
 	document.getElementById("form").action = updateEndpoint;
 	document.getElementById("plant").value = plant;
+	document.getElementById("plant").size = plant.length;
 	document.getElementById("update").value = `
 	prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 	prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
@@ -54,7 +55,7 @@ function init() {
 <h1>Observation</h1>
 <form id="form" method="post">
 <input id="update" name="update" type="hidden" />
-<label for="plant">Plant: </label><input id="plant" name="plant" type="url" />
+<label for="plant">Plant: </label><input id="plant" name="plant" type="url"/>
 <br/>
 <label for="width">Width: </label><input id="width" name="width" type="number" />
 <br/>
