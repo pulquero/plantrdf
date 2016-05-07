@@ -8,10 +8,8 @@ label {
 	width: 150px
 }
 </style>
-<script src="js/config.js">
-</script>
-<script src="js/plantrdf.js">
-</script>
+<script src="js/config.js"></script>
+<script src="js/plantrdf.js"></script>
 <script>
 var garden = "mexilandia";
 var updateEndpoint = getUpdateEndpoint(garden);
@@ -28,9 +26,29 @@ var plant = params['plant'];
 var graph = params['graph'];
 
 function init() {
-	document.getElementById("form").action = updateEndpoint;
-	document.getElementById("plant").value = plant;
-	document.getElementById("plant").size = plant.length;
+	var form = document.getElementById("form");
+	form.action = updateEndpoint;
+	form.onsubmit = function() {
+		for(var e of form.elements) {
+			var v = e.value;
+			var t = e.type;
+			if(t == 'url') {
+				e.value = '<' + v + '>';
+			}
+			else if(t == 'number') {
+				e.value = '"' + v + '"^^xsd:integer';
+			}
+			else if(t == 'checkbox') {
+				e.value = '"' + v + '"^^xsd:boolean';
+			}
+			else {
+				e.value ='"' + v + '"';
+			}
+		}
+	};
+	var plantField = document.getElementById("plant");
+	plantField.value = plant;
+	plantField.size = plant.length;
 	var updateSparql = `
 	prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 	prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
