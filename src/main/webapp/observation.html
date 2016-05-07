@@ -42,7 +42,7 @@ function init() {
 				e.value = '"' + v + '"^^xsd:boolean';
 			}
 			else {
-				e.value ='"' + v + '"';
+				e.value ='"' + v.replace('\n','\\n').replace('\r','\\r') + '"';
 			}
 		}
 	};
