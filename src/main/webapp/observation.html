@@ -15,7 +15,7 @@ var garden = "mexilandia";
 var updateEndpoint = getUpdateEndpoint(garden);
 var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
 
-var plant = document.referrer;
+var plant = window.location.search.substring(1);
 document.getElementById("form").action = updateEndpoint;
 document.getElementById("plant").value = plant;
 document.getElementById("update").value = `
@@ -32,6 +32,7 @@ insert {
 		?obs p:leafCount $leafCount .
 		?obs p:flowerCount $flowerCount .
 		?obs p:fruitCount $fruitCount .
+		?obs p:watered $watered .
 		?obs rdfs:label $notes .
 	}
 }
@@ -59,6 +60,8 @@ where {
 <label for="flowerCount">Flower count: </label><input id="flowerCount" name="flowerCount" type="number" />
 <br/>
 <label for="fruitCount">Fruit count: </label><input id="fruitCount" name="fruitCount" type="number" />
+<br/>
+<label for="watered">Watered: </label><input id="watered" name="watered" type="checkbox" />
 <br/>
 <br/>
 <label>Notes</label>
