@@ -283,7 +283,7 @@ public class DescribeServlet extends HttpServlet {
 	}
 
 	private static URL queryUrl(URL endpoint, String query) throws IOException {
-		return new URL(endpoint, "?query=" + URLEncoder.encode(query, "UTF-8"));
+		return new URL(endpoint, endpoint.getPath()+"?query=" + URLEncoder.encode(query, "UTF-8"));
 	}
 
 	private static URL createUrl(HttpServletRequest req, String path) throws MalformedURLException {
