@@ -31,18 +31,26 @@ function init() {
 	form.onsubmit = function() {
 		for(var e of form.elements) {
 			var v = e.value;
-			var t = e.type;
-			if(t == 'url') {
-				e.value = '<' + v + '>';
-			}
-			else if(t == 'number') {
-				e.value = '"' + v + '"^^xsd:integer';
-			}
-			else if(t == 'checkbox') {
-				e.value = '"' + v + '"^^xsd:boolean';
-			}
-			else {
-				e.value ='"' + v.replace('\n','\\n').replace('\r','\\r') + '"';
+			if(v != '') {
+				var t = e.type;
+				if(t == 'url') {
+					if(v.charAt(0) != '<') {
+						e.value = '<' + v + '>';
+					}
+				}
+				else if(t == 'number') {
+					if(v.charAt(0) != '"') {
+						e.value = '"' + v + '"^^xsd:integer';
+					}
+				}
+				else if(t == 'checkbox') {
+					e.value = '"true"^^xsd:boolean';
+				}
+				else {
+					if(v.charAt(0) != '"') {
+						e.value ='"' + v.replace(/([\\"\n\r\t])/g, '\\$1') + '"';
+					}
+				}
 			}
 		}
 	};
@@ -94,7 +102,7 @@ function init() {
 <br/>
 <label for="fruitCount">Fruit count: </label><input id="fruitCount" name="$fruitCount" type="number" />
 <br/>
-<label for="watered">Watered: </label><input id="watered" name="$watered" type="checkbox" value="true"/>
+<label for="watered">Watered: </label><input id="watered" name="$watered" type="checkbox" />
 <br/>
 <br/>
 <label>Notes</label>
