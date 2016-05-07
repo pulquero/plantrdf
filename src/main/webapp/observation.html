@@ -51,7 +51,7 @@ function init() {
 	}
 	where {
 		bind(now() as ?now)
-		bind(iri(concat('${plant}', ';date=', ?now)) as ?obs)
+		bind(iri(concat('${plant}', ';date=', str(?now))) as ?obs)
 		bind(strdt($width, unit:Centimeter) as ?w)
 		bind(strdt($height, unit:Centimeter) as ?h)
 	}
@@ -76,7 +76,7 @@ function init() {
 <br/>
 <label for="fruitCount">Fruit count: </label><input id="fruitCount" name="fruitCount" type="number" />
 <br/>
-<label for="watered">Watered: </label><input id="watered" name="watered" type="checkbox" />
+<label for="watered">Watered: </label><input id="watered" name="watered" type="checkbox" value="true"/>
 <br/>
 <br/>
 <label>Notes</label>
