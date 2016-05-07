@@ -35,11 +35,13 @@ function init() {
 				var t = e.type;
 				if(t == 'url') {
 					if(v.charAt(0) != '<') {
+						e.type = 'text';
 						e.value = '<' + v + '>';
 					}
 				}
 				else if(t == 'number') {
 					if(v.charAt(0) != '"') {
+						e.type = 'text';
 						e.value = '"' + v + '"^^<http://www.w3.org/2001/XMLSchema#integer>';
 					}
 				}
