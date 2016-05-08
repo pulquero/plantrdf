@@ -48,6 +48,13 @@ public class DescribeServlet extends HttpServlet {
 	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
 	private static final String EDIT_HTML_CONTENT_TYPE = "application/xhtml+xml; edit";
 	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
+	private static final String BOOLEAN_CONTENT_TYPE = "text/boolean";
+
+	private static final String ACCEPT_HEADER = "Accept";
+
+	private static final String HTML_PARAM = "html";
+	private static final String EDIT_PARAM = "edit";
+	private static final String OBSERVATION_PARAM = "observation";
 
 	static {
 		Authenticator.setDefault(new Authenticator() {
@@ -85,7 +92,7 @@ public class DescribeServlet extends HttpServlet {
 		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
 			@Override
 			public ContentHandler createContentHandler(String mimetype) {
-				if ("text/boolean".equals(mimetype)) {
+				if (BOOLEAN_CONTENT_TYPE.equals(mimetype)) {
 					return new BooleanContentHandler();
 				}
 				return null;
@@ -123,13 +130,13 @@ public class DescribeServlet extends HttpServlet {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
-			boolean htmlParam = (req.getParameter("html") != null);
-			boolean editParam = (req.getParameter("edit") != null);
+			boolean htmlParam = (req.getParameter(HTML_PARAM) != null);
+			boolean editParam = (req.getParameter(EDIT_PARAM) != null);
 			boolean showHtml = htmlParam || editParam;
-			boolean obsParam = (req.getParameter("observation") != null);
+			boolean obsParam = (req.getParameter(OBSERVATION_PARAM) != null);
 			boolean isRedirected = showHtml || obsParam;
 			boolean acceptHtml = false;
-			for (Enumeration<String> iter = req.getHeaders("Accept"); iter.hasMoreElements();) {
+			for (Enumeration<String> iter = req.getHeaders(ACCEPT_HEADER); iter.hasMoreElements();) {
 				if (iter.nextElement().contains("html")) {
 					acceptHtml = true;
 					break;
@@ -140,9 +147,9 @@ public class DescribeServlet extends HttpServlet {
 				String redirectUrl;
 				String isPlantQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
 				if (ask(queryUrl(endpoint, isPlantQuery))) {
-					redirectUrl = req.getRequestURL().append("?observation").toString();
+					redirectUrl = req.getRequestURL().append("?"+OBSERVATION_PARAM).toString();
 				} else {
-					redirectUrl = req.getRequestURL().append("?html").toString();
+					redirectUrl = req.getRequestURL().append("?"+HTML_PARAM).toString();
 				}
 				sendRedirect(resp, redirectUrl);
 				return;
@@ -177,7 +184,7 @@ public class DescribeServlet extends HttpServlet {
 			try {
 				SAXParser parser = parserFactory.newSAXParser();
 				URLConnection nsConn = namespaceUrl.openConnection();
-				nsConn.setRequestProperty("Accept", "application/sparql-results+xml");
+				nsConn.setRequestProperty(ACCEPT_HEADER, "application/sparql-results+xml");
 				try (InputStream nsIn = nsConn.getInputStream()) {
 					parser.parse(nsIn, new DefaultHandler() {
 						String name;
@@ -272,13 +279,13 @@ public class DescribeServlet extends HttpServlet {
 
 	private static boolean ask(URL queryUrl) throws IOException {
 		URLConnection conn = queryUrl.openConnection();
-		conn.setRequestProperty("Accept", "text/boolean");
+		conn.setRequestProperty(ACCEPT_HEADER, BOOLEAN_CONTENT_TYPE);
 		return (Boolean) conn.getContent(new Class[] {Boolean.class});
 	}
 
 	private static InputStream rdf(URL queryUrl) throws IOException {
 		URLConnection conn = queryUrl.openConnection();
-		conn.setRequestProperty("Accept", "application/rdf+xml");
+		conn.setRequestProperty(ACCEPT_HEADER, RDF_CONTENT_TYPE);
 		return conn.getInputStream();
 	}
 
