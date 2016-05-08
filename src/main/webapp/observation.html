@@ -73,6 +73,7 @@ function init() {
 			?obs p:on ?now .
 			?obs p:width ?w .
 			?obs p:height ?h .
+			?obs p:stemCount $stemCount .
 			?obs p:leafCount $leafCount .
 			?obs p:flowerCount $flowerCount .
 			?obs p:fruitCount $fruitCount .
@@ -83,8 +84,8 @@ function init() {
 	where {
 		bind(now() as ?now)
 		bind(iri(concat('${plant}', ';date=', str(?now))) as ?obs)
-		bind(strdt($width, unit:Centimeter) as ?w)
-		bind(strdt($height, unit:Centimeter) as ?h)
+		bind(strdt(str($width), unit:Centimeter) as ?w)
+		bind(strdt(str($height), unit:Centimeter) as ?h)
 	}
 	`;
 	document.getElementById("update").value = updateSparql;
@@ -100,6 +101,8 @@ function init() {
 <label for="width">Width: </label><input id="width" name="$width" type="number" />
 <br/>
 <label for="height">Height: </label><input id="height" name="$height" type="number" />
+<br/>
+<label for="stemCount">Stem count: </label><input id="stemCount" name="$stemCount" type="number" />
 <br/>
 <label for="leafCount">Leaf count: </label><input id="leafCount" name="$leafCount" type="number" />
 <br/>
