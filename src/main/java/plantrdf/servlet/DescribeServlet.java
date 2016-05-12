@@ -119,7 +119,7 @@ public class DescribeServlet extends HttpServlet {
 		String repo = pathInfo.substring(1, pos);
 		String graph = "http://plantrdf-morethancode.rhcloud.com/gardens/" + repo;
 
-		URL endpoint = createUrl(req, sesameRepos + repo);
+		URL endpoint = createUrl(req, sesameRepos + repo + "/");
 
 		int extPos = pathInfo.lastIndexOf('.');
 		String resource;
@@ -133,14 +133,25 @@ public class DescribeServlet extends HttpServlet {
 			ext = null;
 		}
 
+		boolean htmlExt = HTML_EXT.equals(ext);
+		if(ext != null && !htmlExt) {
+			resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
+			return;
+		}
+
 		PASSWORD_AUTH.set(credentials);
 		try {
-			String existsQuery = String.format("ask where {<%s> ?p ?o}", resource);
+			String hashNamespace = resource + "#";
+			String existsQuery = String.format("ask where { {<%s> ?p ?o} union "
+				+ " {"
+				+ "  filter(strstarts(str(?s), \"%s\"))"
+				+ "  ?s ?p ?o ."
+				+ " }"
+				+ "}", resource, hashNamespace);
 			if(!ask(queryUrl(endpoint, existsQuery))) {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
-			boolean htmlExt = HTML_EXT.equals(ext);
 			boolean editParam = (req.getParameter(EDIT_PARAM) != null);
 			boolean showHtml = htmlExt || editParam;
 			boolean obsParam = (req.getParameter(OBSERVATION_PARAM) != null);
@@ -248,13 +259,13 @@ public class DescribeServlet extends HttpServlet {
 
 		URL xslUrl = createUrl(req, "describe.xsl");
 		String describeQuery;
-		String hashNamespace = req.getRequestURL().append('#').toString();
+		String hashNamespace = resource + "#";
 		boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 		if (isHashNamespace) {
 			describeQuery = String.format(
-					"describe <%s> ?s " + "where {" + " select distinct ?s " + " where {"
-							+ "  filter(strstarts(str(?s), \"%s\"))" + "  ?s ?p ?o ." + " }" + "}",
-					resource, hashNamespace);
+				"describe <%s> ?s " + "where {" + " select distinct ?s " + " where {"
+					+ "  filter(strstarts(str(?s), \"%s\"))" + "  ?s ?p ?o ." + " }" + "}",
+				resource, hashNamespace);
 		} else {
 			describeQuery = String.format("describe <%s>", resource);
 		}
