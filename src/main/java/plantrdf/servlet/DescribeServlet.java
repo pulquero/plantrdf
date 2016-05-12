@@ -119,7 +119,7 @@ public class DescribeServlet extends HttpServlet {
 		String repo = pathInfo.substring(1, pos);
 		String graph = "http://plantrdf-morethancode.rhcloud.com/gardens/" + repo;
 
-		URL endpoint = createUrl(req, sesameRepos + repo + "/");
+		URL endpoint = createUrl(req, sesameRepos + repo);
 
 		int extPos = pathInfo.lastIndexOf('.');
 		String resource;
@@ -198,7 +198,7 @@ public class DescribeServlet extends HttpServlet {
 	}
 
 	private void doRdf(URL endpoint, String graph, String resource, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		URL namespaceUrl = new URL(endpoint, "namespaces");
+		URL namespaceUrl = new URL(endpoint.toString()+"/namespaces");
 		final Map<String, String> nsMap = new HashMap<String, String>();
 		try {
 			SAXParserFactory parserFactory = parserFactoryPool.borrowObject();
