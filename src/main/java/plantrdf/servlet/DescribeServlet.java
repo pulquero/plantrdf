@@ -121,15 +121,15 @@ public class DescribeServlet extends HttpServlet {
 
 		URL endpoint = createUrl(req, sesameRepos + repo);
 
-		String reqUrl = req.getRequestURL().toString();
-		int extPos = reqUrl.lastIndexOf(".");
+		int extPos = pathInfo.lastIndexOf('.');
 		String resource;
 		String ext;
 		if(extPos != -1) {
-			resource = reqUrl.substring(0, extPos);
-			ext = reqUrl.substring(extPos+1);
+			StringBuffer reqUrl = req.getRequestURL();
+			resource = reqUrl.substring(0, reqUrl.length()-pathInfo.length()+extPos);
+			ext = pathInfo.substring(extPos+1);
 		} else {
-			resource = reqUrl;
+			resource = req.getRequestURL().toString();
 			ext = null;
 		}
 
