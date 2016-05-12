@@ -52,7 +52,7 @@ public class DescribeServlet extends HttpServlet {
 
 	private static final String ACCEPT_HEADER = "Accept";
 
-	private static final String HTML_PARAM = "html";
+	private static final String HTML_EXT = "html";
 	private static final String EDIT_PARAM = "edit";
 	private static final String OBSERVATION_PARAM = "observation";
 
@@ -121,7 +121,17 @@ public class DescribeServlet extends HttpServlet {
 
 		URL endpoint = createUrl(req, sesameRepos + repo);
 
-		String resource = req.getRequestURL().toString();
+		String reqUrl = req.getRequestURL().toString();
+		int extPos = reqUrl.lastIndexOf(".");
+		String resource;
+		String ext;
+		if(extPos != -1) {
+			resource = reqUrl.substring(0, extPos);
+			ext = reqUrl.substring(extPos+1);
+		} else {
+			resource = reqUrl;
+			ext = null;
+		}
 
 		PASSWORD_AUTH.set(credentials);
 		try {
@@ -130,9 +140,9 @@ public class DescribeServlet extends HttpServlet {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
-			boolean htmlParam = (req.getParameter(HTML_PARAM) != null);
+			boolean htmlExt = HTML_EXT.equals(ext);
 			boolean editParam = (req.getParameter(EDIT_PARAM) != null);
-			boolean showHtml = htmlParam || editParam;
+			boolean showHtml = htmlExt || editParam;
 			boolean obsParam = (req.getParameter(OBSERVATION_PARAM) != null);
 			boolean isRedirected = showHtml || obsParam;
 			boolean acceptHtml = false;
@@ -147,9 +157,9 @@ public class DescribeServlet extends HttpServlet {
 				String redirectUrl;
 				String isPlantQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
 				if (ask(queryUrl(endpoint, isPlantQuery))) {
-					redirectUrl = req.getRequestURL().append("?"+OBSERVATION_PARAM).toString();
+					redirectUrl = req.getRequestURL().append('?').append(OBSERVATION_PARAM).toString();
 				} else {
-					redirectUrl = req.getRequestURL().append("?"+HTML_PARAM).toString();
+					redirectUrl = req.getRequestURL().append('.').append(HTML_EXT).toString();
 				}
 				sendRedirect(resp, redirectUrl);
 				return;
@@ -177,7 +187,7 @@ public class DescribeServlet extends HttpServlet {
 	}
 
 	private void doRdf(URL endpoint, String graph, String resource, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		URL namespaceUrl = new URL(endpoint, "/namespaces");
+		URL namespaceUrl = new URL(endpoint, "namespaces");
 		final Map<String, String> nsMap = new HashMap<String, String>();
 		try {
 			SAXParserFactory parserFactory = parserFactoryPool.borrowObject();

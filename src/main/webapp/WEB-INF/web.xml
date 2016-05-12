@@ -11,7 +11,7 @@
 		<servlet-class>plantrdf.servlet.DescribeServlet</servlet-class>
 		<init-param>
 			<param-name>sesameUrl</param-name>
-			<param-value>openrdf-sesame/</param-value>
+			<param-value>/openrdf-sesame/</param-value>
 		</init-param>
 		<init-param>
 			<param-name>username</param-name>
