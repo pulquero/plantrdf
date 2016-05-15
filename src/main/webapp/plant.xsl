@@ -7,7 +7,7 @@
 			<head>
 			</head>
 			<body>
-				<h1><xsl:value-of="/res:sparql/res:results/res:result/res:binding[name='label']"/></h1>
+				<h1><xsl:value-of select="/res:sparql/res:results/res:result/res:binding[name='label']"/></h1>
 			</body>
 		</html>
 	</xsl:template>
