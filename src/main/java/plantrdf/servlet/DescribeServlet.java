@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -46,15 +47,16 @@ public class DescribeServlet extends HttpServlet {
 	private static final String PLANT_CLASS = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
 
 	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
-	private static final String EDIT_HTML_CONTENT_TYPE = "application/xhtml+xml; edit";
 	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
 	private static final String BOOLEAN_CONTENT_TYPE = "text/boolean";
 
 	private static final String ACCEPT_HEADER = "Accept";
 
 	private static final String HTML_EXT = "html";
-	private static final String EDIT_PARAM = "edit";
-	private static final String OBSERVATION_PARAM = "observation";
+	private static final String ACTION_PARAM = "action";
+	private static final String EDIT_ACTION = "edit";
+	private static final String OBSERVE_ACTION = "observe";
+	private static final String VIEW_PLANT_ACTION = "view-plant";
 
 	static {
 		Authenticator.setDefault(new Authenticator() {
@@ -133,8 +135,8 @@ public class DescribeServlet extends HttpServlet {
 			ext = null;
 		}
 
-		boolean htmlExt = HTML_EXT.equals(ext);
-		if(ext != null && !htmlExt) {
+		boolean showHtml = HTML_EXT.equals(ext);
+		if(ext != null && !showHtml) {
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 			return;
 		}
@@ -152,10 +154,8 @@ public class DescribeServlet extends HttpServlet {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
-			boolean editParam = (req.getParameter(EDIT_PARAM) != null);
-			boolean showHtml = htmlExt || editParam;
-			boolean obsParam = (req.getParameter(OBSERVATION_PARAM) != null);
-			boolean isRedirected = showHtml || obsParam;
+			String action = req.getParameter(ACTION_PARAM);
+			boolean isRedirected = showHtml || action != null;
 			boolean acceptHtml = false;
 			for (Enumeration<String> iter = req.getHeaders(ACCEPT_HEADER); iter.hasMoreElements();) {
 				if (iter.nextElement().contains("html")) {
@@ -168,7 +168,18 @@ public class DescribeServlet extends HttpServlet {
 				String redirectUrl;
 				String isPlantQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
 				if (ask(queryUrl(endpoint, isPlantQuery))) {
-					redirectUrl = req.getRequestURL().append('?').append(OBSERVATION_PARAM).toString();
+					boolean doObserve = false;
+					for(Cookie cookie : req.getCookies()) {
+						if ("observe".equals(cookie.getName())) {
+							doObserve = "on".equals(cookie.getValue());
+							break;
+						}
+					}
+					if (doObserve) {
+						redirectUrl = req.getRequestURL().append('?').append(ACTION_PARAM).append('=').append(OBSERVE_ACTION).toString();
+					} else {
+						redirectUrl = req.getRequestURL().append('.').append(HTML_EXT).append('?').append(ACTION_PARAM).append('=').append(VIEW_PLANT_ACTION).toString();
+					}
 				} else {
 					redirectUrl = req.getRequestURL().append('.').append(HTML_EXT).toString();
 				}
@@ -176,17 +187,17 @@ public class DescribeServlet extends HttpServlet {
 				return;
 			}
 
-			if(obsParam) {
+			if(OBSERVE_ACTION.equals(action)) {
 				doObservation(graph, resource, req, resp);
 			}
 			else {
 				String contentType;
 				if(showHtml) {
-					contentType = editParam ? EDIT_HTML_CONTENT_TYPE : HTML_CONTENT_TYPE;
+					contentType = HTML_CONTENT_TYPE;
 				} else {
 					contentType = RDF_CONTENT_TYPE;
 				}
-				doRdf(endpoint, graph, resource, contentType, req, resp);
+				doRdf(endpoint, graph, resource, contentType, action, req, resp);
 			}
 		} finally {
 			PASSWORD_AUTH.remove();
@@ -197,7 +208,7 @@ public class DescribeServlet extends HttpServlet {
 		resp.sendRedirect("/observation.html?graph="+URLEncoder.encode(graph, "UTF-8")+"&plant="+URLEncoder.encode(resource, "UTF-8"));
 	}
 
-	private void doRdf(URL endpoint, String graph, String resource, String contentType, HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	private void doRdf(URL endpoint, String graph, String resource, String contentType, String action, HttpServletRequest req, HttpServletResponse resp) throws IOException {
 		URL namespaceUrl = new URL(endpoint.toString()+"/namespaces");
 		final Map<String, String> nsMap = new HashMap<String, String>();
 		try {
@@ -257,18 +268,29 @@ public class DescribeServlet extends HttpServlet {
 			throw new IOException(e);
 		}
 
-		URL xslUrl = createUrl(req, "describe.xsl");
+		String stylesheet;
 		String describeQuery;
-		String hashNamespace = resource + "#";
-		boolean isHashNamespace = nsMap.containsKey(hashNamespace);
-		if (isHashNamespace) {
-			describeQuery = String.format(
-				"describe <%s> ?s " + "where {" + " select distinct ?s " + " where {"
-					+ "  filter(strstarts(str(?s), \"%s\"))" + "  ?s ?p ?o ." + " }" + "}",
-				resource, hashNamespace);
+		if (VIEW_PLANT_ACTION.equals(action)) {
+			stylesheet = "plant.xsl";
+			describeQuery = String.format("select * where {"
+					+" filter(?plant = <%s>)"
+					+" ?plant a <%s> ."
+					+" ?plant rdfs:label ?label ."
+					+" }", resource, PLANT_CLASS);
 		} else {
-			describeQuery = String.format("describe <%s>", resource);
+			stylesheet = "describe.xsl";
+			String hashNamespace = resource + "#";
+			boolean isHashNamespace = nsMap.containsKey(hashNamespace);
+			if (isHashNamespace) {
+				describeQuery = String.format(
+					"describe <%s> ?s " + "where {" + " select distinct ?s " + " where {"
+						+ "  filter(strstarts(str(?s), \"%s\"))" + "  ?s ?p ?o ." + " }" + "}",
+					resource, hashNamespace);
+			} else {
+				describeQuery = String.format("describe <%s>", resource);
+			}
 		}
+		URL xslUrl = createUrl(req, stylesheet);
 		URL describeUrl = queryUrl(endpoint, describeQuery);
 
 		if (contentType.startsWith(HTML_CONTENT_TYPE)) {
@@ -279,7 +301,7 @@ public class DescribeServlet extends HttpServlet {
 					Transformer transformer = transformerFactory
 							.newTransformer(new StreamSource(xslUrl.toString()));
 					transformer.setParameter("resource", resource);
-					if (EDIT_HTML_CONTENT_TYPE.equals(contentType)) {
+					if (EDIT_ACTION.equals(action)) {
 						transformer.setParameter("graph", graph);
 						transformer.setParameter("updateEndpoint", new URL(endpoint, "/statements").toString());
 					}
