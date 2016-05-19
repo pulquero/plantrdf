@@ -45,6 +45,7 @@ public class DescribeServlet extends HttpServlet {
 	private static final long serialVersionUID = -5798564486501498686L;
 
 	private static final String PLANT_CLASS = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
+	private static final String SCIENTIFIC_NAME_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#scientificName";
 
 	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
 	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
@@ -272,11 +273,16 @@ public class DescribeServlet extends HttpServlet {
 		String describeQuery;
 		if (VIEW_PLANT_ACTION.equals(action)) {
 			stylesheet = "plant.xsl";
-			describeQuery = String.format("select * where {"
-					+" filter(?plant = <%s>)"
-					+" ?plant a <%s> ."
-					+" ?plant rdfs:label ?label ."
-					+" }", resource, PLANT_CLASS);
+			describeQuery = String.format("construct {"
+					+ "  ?res ?_p1 ?_o1 ."
+					+ "  ?ipni ?_p2 ?_o2 ."
+					+ " } where {"
+					+ "  <%s> a <%s> ."
+					+ "  <%s> <%s> ?ipni ."
+					+ "  ?res <%s> ?ipni ."
+					+ "  ?res ?_p1 ?_o1 ."
+					+ "  ?ipni ?_p2 ?_o2 ."
+					+ " }", resource, PLANT_CLASS, resource, SCIENTIFIC_NAME_PROPERTY, SCIENTIFIC_NAME_PROPERTY);
 		} else {
 			stylesheet = "describe.xsl";
 			String hashNamespace = resource + "#";
