@@ -29,7 +29,7 @@ if(param != null) {
 }
 %>
 <p>Observations are <%= isOn ? "on" : "off" %>.</p>
-<% if(isOn) {% >
+<% if(isOn) { %>
 <p><a href="observe.jsp?ensure=off">off</a></p>
 <% } else { %>
 <p><a href="observe.jsp?ensure=on">on</a></p>
