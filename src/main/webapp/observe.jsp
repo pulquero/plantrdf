@@ -7,9 +7,12 @@
 <body>
 <%
 boolean isOn = false;
-for(Cookie cookie : request.getCookies()) {
-	if("observe".equals(cookie.getName())) {
-		isOn = true;
+Cookie[] cookies = request.getCookies();
+if(cookies != null) {
+	for(Cookie cookie : cookies) {
+		if("observe".equals(cookie.getName())) {
+			isOn = true;
+		}
 	}
 }
 

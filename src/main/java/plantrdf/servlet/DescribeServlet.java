@@ -170,10 +170,13 @@ public class DescribeServlet extends HttpServlet {
 				String isPlantQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
 				if (ask(queryUrl(endpoint, isPlantQuery))) {
 					boolean doObserve = false;
-					for(Cookie cookie : req.getCookies()) {
-						if ("observe".equals(cookie.getName())) {
-							doObserve = "on".equals(cookie.getValue());
-							break;
+					Cookie[] cookies = req.getCookies();
+					if(cookies != null) {
+						for(Cookie cookie : cookies) {
+							if ("observe".equals(cookie.getName())) {
+								doObserve = "on".equals(cookie.getValue());
+								break;
+							}
 						}
 					}
 					if (doObserve) {
