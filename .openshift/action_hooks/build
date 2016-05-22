@@ -1,1 +1,1 @@
-cp $OPENSHIFT_DATA_DIR/webapps/* $OPENSHIFT_REPO_DIR/webapps/
+cp $OPENSHIFT_DATA_DIR/webapps/* $OPENSHIFT_DEPENDENCIES_DIR/jbossews/webapps/
