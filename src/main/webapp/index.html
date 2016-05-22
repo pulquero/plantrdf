@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PlantRDF</title>
+<style>
+.edit {
+	display: none
+}
+
+.view {
+	display: none
+}
+</style>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="js/d3sparql.js"></script>
+<script src="js/d3sparql-ext.js"></script>
+<script src="js/config.js"></script>
+<script src="js/plantrdf.js"></script>
+<script>
+const PLANT_TYPE = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
+const LABEL_PROPERTY = "http://www.w3.org/2000/01/rdf-schema#label";
+const PROVENANCE_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#provenance";
+const SCIENTIFIC_NAME_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#scientificName";
+const HARDINESS_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#hardiness";
+const PLANT_COL = 0;
+const LABEL_COL = 1;
+const PROVENANCE_COL = 2;
+const SPECIES_COL = 3;
+const HARDINESS_COL = 4;
+const EMPTY_PROMISE = new Promise(function(resolve,reject) {resolve();});
+var garden = "mexilandia";
+var queryEndpoint = getQueryEndpoint(garden);
+var updateEndpoint = getUpdateEndpoint(garden);
+var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
+const resultSelector = "#result";
+
+var provenances = null;
+
+function getProvenances(callback) {
+	if(provenances == null) {
+		provenances = new Promise(function(resolve,reject) {
+			d3sparql.query(queryEndpoint, queries.getProvenances(), function(json) {
+				resolve(sparqlResultsArray(json));
+			});
+		});
+	}
+	return provenances.then(callback);
+}
+
+var hardinessRatings = null;
+
+function getHardinessRatings(callback) {
+	if(hardinessRatings == null) {
+		hardinessRatings = new Promise(function(resolve,reject) {
+			d3sparql.query(queryEndpoint, queries.getHardinessRatings(), function(json) {
+				resolve(sparqlResultsArray(json));
+			});
+		});
+	}
+	return hardinessRatings.then(callback);
+}
+
+function sparqlResultsArray(json) {
+	let head = json.head.vars;
+	let data = json.results.bindings;
+	let l = [];
+	for(let row of data) {
+		l.push(row[head[0]].value);
+	}
+	return l;
+}
+
+function init() {
+	d3.select("#editMode").on("click", setEditMode);
+	d3.select("#viewMode").on("click", setViewMode);
+	d3.select("#download").attr("href", updateEndpoint);
+	d3.select("#newButton").on("click", addNewPlant);
+	d3sparql.query(queryEndpoint, queries.getPlants(gardenGraph), render);
+}
+
+function render(json) {
+	var config = {
+		"selector": resultSelector
+	};
+	d3sparql.htmltable(json, config);
+	setViewMode();
+}
+
+function setViewMode() {
+	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+	dataCells.on("click", null);
+	dataCells.html(function(d, i, j) {
+		if(d.startsWith("http://")) {
+			let label;
+			switch(i) {
+				case PLANT_COL:
+					label = d.substring(gardenGraph.length+1);
+					break;
+				case SPECIES_COL:
+				case HARDINESS_COL:
+					label = localName(d);
+					break;
+				default:
+					label = d;
+			}
+			return '<a href="'+d+'">'+label+'</a>';
+		}
+		else {
+			return d;
+		}
+	});
+	d3.selectAll(".view").style({"display": "block"});
+	d3.selectAll(".edit").style({"display": "none"});
+}
+
+function setEditMode() {
+	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+	dataCells.html(function(d, i, j) {
+		return d;
+	});
+	dataCells.on("click", editAction);
+	d3.selectAll(".view").style({"display": "none"});
+	d3.selectAll(".edit").style({"display": "block"});
+}
+
+function editAction(d, i, j) {
+	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+	dataCells.on("click", null);
+	var cell = d3.select(this);
+	cell.html("");
+	var form = cell.append("form").attr("id", "edit_"+i+"_"+j);
+	var inputField;
+	switch(i) {
+		case LABEL_COL:
+		case PROVENANCE_COL:
+			inputField = form.append("input").attr("value", d).attr("size", d.length);
+			break;
+		case HARDINESS_COL:
+			inputField = form.append("select");
+			break;
+		case PLANT_COL:
+			if(d == "") {
+				d = gardenGraph;
+			}
+		default:
+			inputField = form.append("input").attr("type", "url").attr("value", d).attr("size", d.length);
+	}
+	inputField.attr("id", "dataField");
+	let plant = d3.select(dataCells[j][PLANT_COL]).datum();
+	form.append("input").attr("id", "plantField").attr("type", "hidden").attr("value", plant);
+	var initForm;
+	switch(i) {
+		case HARDINESS_COL:
+			inputField.style({"display":"none"});
+			initForm = new Promise(function(resolve,reject) {
+				getHardinessRatings(function(ratings) {
+					let hasDefault = false;
+					for(let h of ratings) {
+						let opt = inputField.append("option").attr("value", h).text(localName(h));
+						if(h == d) {
+							opt.attr("selected", true);
+							hasDefault = true;
+						}
+					}
+					if (!hasDefault) {
+						inputField.append("option").attr("value", d).attr("selected", true);
+					}
+					inputField.style({"display":null});
+					resolve();
+				});
+			});
+			break;
+		case PROVENANCE_COL:
+			inputField.style({"display":"none"});
+			initForm = new Promise(function(resolve,reject) {
+				getProvenances(function(provenances) {
+					inputField.attr("list", "provenanceList");
+					let list = form.append("datalist").attr("id", "provenanceList");
+					for(let p of provenances) {
+						list.append("option").attr("value", p);
+					}
+					inputField.style({"display":null});
+					resolve();
+				});
+			});
+			break;
+		default:
+			initForm = EMPTY_PROMISE;
+	}
+	initForm.then(function() {
+		inputField.on("change", commitAction);
+		inputField.on("blur", cancelAction);
+		inputField.node().focus();
+	});
+}
+
+function commitAction(d) {
+	var form = d3.select(this.parentNode);
+	var cell = d3.select(this.parentNode.parentNode);
+	var row = d3.select(this.parentNode.parentNode.parentNode);
+	let plant = form.select("#plantField").node().value;
+	var oldValue = d;
+	var newValue = this.value;
+	let formId = form.attr("id");
+	let sep1 = formId.indexOf("_");
+	let sep2 = formId.lastIndexOf("_");
+	let i = parseInt(formId.substring(sep1+1, sep2));
+	let j = parseInt(formId.substring(sep2+1));
+	let header = d3.select(resultSelector).select("thead").select("tr").selectAll("th").data();
+	var headerName = header[i];
+	var updateSparql;
+	let update;
+	switch(i) {
+		case PLANT_COL:
+			updateSparql = queries.replaceResource(oldValue, newValue, PLANT_TYPE, gardenGraph);
+			update = new Promise(function(resolve,reject) {
+				let checkSparql = queries.checkExists(newValue, gardenGraph);
+				d3sparql.ask(queryEndpoint, checkSparql, function(exists) {
+					if(!exists) {
+						resolve();
+					}
+					else {
+						reject(newValue+" already exists!");
+					}
+				});
+			});
+			break;
+		case LABEL_COL:
+			updateSparql = queries.replaceProperty(plant, LABEL_PROPERTY, "literal", oldValue, newValue, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		case PROVENANCE_COL:
+			updateSparql = queries.replaceProperty(plant, PROVENANCE_PROPERTY, "literal", oldValue, newValue, gardenGraph);
+			update = EMPTY_PROMISE;
+			provenances = null;
+			break;
+		case SPECIES_COL:
+			updateSparql = queries.replaceProperty(plant, SCIENTIFIC_NAME_PROPERTY, "uri", oldValue, newValue, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		case HARDINESS_COL:
+			updateSparql = queries.replaceProperty2(plant, SCIENTIFIC_NAME_PROPERTY, HARDINESS_PROPERTY, "uri", oldValue, newValue, gardenGraph);
+			update = EMPTY_PROMISE;
+			break;
+		default:
+			return;
+	}
+	update.then(function() {
+		d3sparql.update(updateEndpoint, updateSparql, function() {
+			cell.datum(newValue);
+			cell.html(newValue);
+			row.datum()[headerName].value = newValue;
+			let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+			dataCells.on("click", editAction);
+		});
+	})
+	.catch(function(reason) {
+		alert(reason);
+	});
+}
+
+function cancelAction(d) {
+	var cell = d3.select(this.parentNode.parentNode);
+	cell.html(d);
+	let dataCells = d3.select(resultSelector).select("tbody").selectAll("tr").selectAll("td");
+	dataCells.on("click", editAction);
+}
+
+function addNewPlant() {
+	let table = d3.select(resultSelector);
+	var header = table.select("thead").select("tr").selectAll("th").data();
+	let dataRows = table.select("tbody").selectAll("tr");
+	let data = dataRows.data();
+	let newRow = {};
+	for(let p of header) {
+		newRow[p] = {value: ""};
+	}
+	data.push(newRow);
+	dataRows = dataRows.data(data).enter().append("tr");
+
+	let dataCells = dataRows.selectAll("td");
+	dataCells.data(function(row) {
+		return header.map(function(col) {
+			return row[col].value;
+		});
+	}).enter().append("td")
+	.text(function(d) {
+		return "New";
+	}).on("click", editAction);
+}
+</script>
+</head>
+<body onload="init()">
+<div id="toolbar">
+<button id="editMode" class="view" type="button">Edit</button>
+<button id="viewMode" class="edit" type="button">View</button>
+<span>Download <a id="download">RDF</a></span>
+</div>
+<div id="result"></div>
+<div>
+<button id="newButton" class="edit" type="button">New</button>
+</div>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>PlantRDF</title>
+<style>
+label {
+	display: inline-block;
+	width: 150px
+}
+</style>
+<script src="js/config.js"></script>
+<script src="js/plantrdf.js"></script>
+<script>
+var garden = "mexilandia";
+var updateEndpoint = getUpdateEndpoint(garden);
+var gardenGraph = "http://plantrdf-morethancode.rhcloud.com/gardens/"+garden;
+
+var params = {};
+var queryStr = window.location.search.substring(1);
+for(var es of queryStr.split('&'))
+{
+	var e = es.split('=');
+	params[e[0]] = decodeURIComponent(e[1]);
+}
+var plant = params['plant'];
+var graph = params['graph'];
+
+function init() {
+	var form = document.getElementById("form");
+	form.action = updateEndpoint;
+	form.onsubmit = function() {
+		for(var e of form.elements) {
+			var v = e.value;
+			if(v != '') {
+				var t = e.type;
+				if(t == 'url') {
+					if(v.charAt(0) != '<') {
+						e.type = 'text';
+						e.value = '<' + v + '>';
+					}
+				}
+				else if(t == 'number') {
+					if(v.charAt(0) != '"') {
+						e.type = 'text';
+						e.value = '"' + v + '"^^<http://www.w3.org/2001/XMLSchema#integer>';
+					}
+				}
+				else if(t == 'checkbox') {
+					e.value = '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>';
+				}
+				else if(t == 'text' || t == 'textarea') {
+					if(v.charAt(0) != '"') {
+						e.value ='"' + v.replace(/([\\"\n\r\t])/g, '\\$1') + '"';
+					}
+				}
+			}
+			else {
+				e.disabled = true;
+			}
+		}
+	};
+	var plantField = document.getElementById("plant");
+	plantField.value = plant;
+	plantField.size = plant.length;
+	var updateSparql = `
+	prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+	prefix unit: <http://data.nasa.gov/qudt/owl/unit#>
+
+	insert {
+		graph <${graph}> {
+			?obs a p:Observation .
+			?obs p:of $plant .
+			?obs p:on ?now .
+			?obs p:width ?w .
+			?obs p:height ?h .
+			?obs p:stemCount $stemCount .
+			?obs p:leafCount $leafCount .
+			?obs p:flowerCount $flowerCount .
+			?obs p:fruitCount $fruitCount .
+			?obs p:watered $watered .
+			?obs rdfs:label $notes .
+		}
+	}
+	where {
+		bind(now() as ?now)
+		bind(iri(concat('${plant}', ';date=', str(?now))) as ?obs)
+		bind(strdt(str($width), unit:Centimeter) as ?w)
+		bind(strdt(str($height), unit:Centimeter) as ?h)
+	}
+	`;
+	document.getElementById("update").value = updateSparql;
+}
+</script>
+</head>
+<body onload="init()">
+<h1>Observation</h1>
+<form id="form" method="post">
+<input id="update" name="update" type="hidden" />
+<label for="plant">Plant: </label><input id="plant" name="$plant" type="url"/>
+<br/>
+<label for="width">Width (cm): </label><input id="width" name="$width" type="number" />
+<br/>
+<label for="height">Height (cm): </label><input id="height" name="$height" type="number" />
+<br/>
+<label for="stemCount">Stem count: </label><input id="stemCount" name="$stemCount" type="number" />
+<br/>
+<label for="leafCount">Leaf count: </label><input id="leafCount" name="$leafCount" type="number" />
+<br/>
+<label for="flowerCount">Flower count: </label><input id="flowerCount" name="$flowerCount" type="number" />
+<br/>
+<label for="fruitCount">Fruit count: </label><input id="fruitCount" name="$fruitCount" type="number" />
+<br/>
+<label for="watered">Watered: </label><input id="watered" name="$watered" type="checkbox" />
+<br/>
+<br/>
+<label>Notes</label>
+<br/>
+<textarea name="$notes" rows="3" cols="40">
+</textarea>
+<br/>
+<br/>
+<button type="submit">Submit</button>
+</form>
+</body>
+</html>
