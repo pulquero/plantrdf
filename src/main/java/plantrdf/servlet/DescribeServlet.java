@@ -145,9 +145,9 @@ public class DescribeServlet extends HttpServlet {
 		PASSWORD_AUTH.set(credentials);
 		try {
 			String hashNamespace = resource + "#";
-			String existsQuery = String.format("ask where { {<%s> ?p ?o} union "
+			String existsQuery = String.format("ask where { {<%1$s> ?p ?o} union "
 				+ " {"
-				+ "  filter(strstarts(str(?s), \"%s\"))"
+				+ "  filter(strstarts(str(?s), \"%2$s\"))"
 				+ "  ?s ?p ?o ."
 				+ " }"
 				+ "}", resource, hashNamespace);
@@ -167,7 +167,7 @@ public class DescribeServlet extends HttpServlet {
 
 			if (!isRedirected && acceptHtml) {
 				String redirectUrl;
-				String isPlantQuery = String.format("ask where {<%s> a <%s>}", resource, PLANT_CLASS);
+				String isPlantQuery = String.format("ask where {<%1$s> a <%2$s>}", resource, PLANT_CLASS);
 				if (ask(queryUrl(endpoint, isPlantQuery))) {
 					boolean doObserve = false;
 					Cookie[] cookies = req.getCookies();
@@ -280,20 +280,20 @@ public class DescribeServlet extends HttpServlet {
 					+ "  ?res ?_p1 ?_o1 ."
 					+ "  ?ipni ?_p2 ?_o2 ."
 					+ " } where {"
-					+ "  <%s> a <%s> ."
-					+ "  <%s> <%s> ?ipni ."
-					+ "  ?res <%s> ?ipni ."
+					+ "  <%1$s> a <%2$s> ."
+					+ "  <%1$s> <%3$s> ?ipni ."
+					+ "  ?res <%3$s> ?ipni ."
 					+ "  ?res ?_p1 ?_o1 ."
 					+ "  ?ipni ?_p2 ?_o2 ."
-					+ " }", resource, PLANT_CLASS, resource, SCIENTIFIC_NAME_PROPERTY, SCIENTIFIC_NAME_PROPERTY);
+					+ " }", resource, PLANT_CLASS, SCIENTIFIC_NAME_PROPERTY);
 		} else {
 			stylesheet = "describe.xsl";
 			String hashNamespace = resource + "#";
 			boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 			if (isHashNamespace) {
 				describeQuery = String.format(
-					"describe <%s> ?s " + "where {" + " select distinct ?s " + " where {"
-						+ "  filter(strstarts(str(?s), \"%s\"))" + "  ?s ?p ?o ." + " }" + "}",
+					"describe <%1$s> ?s " + "where {" + " select distinct ?s " + " where {"
+						+ "  filter(strstarts(str(?s), \"%2$s\"))" + "  ?s ?p ?o ." + " }" + "}",
 					resource, hashNamespace);
 			} else {
 				describeQuery = String.format("describe <%s>", resource);
