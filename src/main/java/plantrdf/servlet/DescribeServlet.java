@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.ContentHandler;
 import java.net.ContentHandlerFactory;
+import java.net.FileNameMap;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
@@ -47,6 +48,7 @@ public class DescribeServlet extends HttpServlet {
 	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
 	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
 	private static final String BOOLEAN_CONTENT_TYPE = "text/boolean";
+	private static final String SPARQL_QUERY_CONTENT_TYPE = "application/sparql-query";
 
 	private static final String ACCEPT_HEADER = "Accept";
 
@@ -95,11 +97,23 @@ public class DescribeServlet extends HttpServlet {
 		describeXslt = createTemplates(transformerFactory, "describe.xsl", ctx);
 		plantXslt = createTemplates(transformerFactory, "plant.xsl", ctx);
 
+		URLConnection.setFileNameMap(new FileNameMap() {
+			private FileNameMap delegate = URLConnection.getFileNameMap();
+			@Override
+			public String getContentTypeFor(String fileName) {
+				if(fileName.endsWith(".rq")) {
+					return SPARQL_QUERY_CONTENT_TYPE;
+				}
+				return delegate.getContentTypeFor(fileName);
+			}
+		});
 		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
 			@Override
 			public ContentHandler createContentHandler(String mimetype) {
 				if (BOOLEAN_CONTENT_TYPE.equals(mimetype)) {
 					return new BooleanContentHandler();
+				} else if (SPARQL_QUERY_CONTENT_TYPE.equals(mimetype)) {
+					return new plantrdf.content.application.sparql_query();
 				}
 				return null;
 			}
@@ -121,7 +135,7 @@ public class DescribeServlet extends HttpServlet {
 		try {
 			for(String queryFile : ctx.getResourcePaths("/WEB-INF/queries/")) {
 				String name = queryFile.substring(queryFile.lastIndexOf('/')+1, queryFile.lastIndexOf('.'));
-				String query = ctx.getResource(queryFile).getContent().toString();
+				String query = (String) ctx.getResource(queryFile).getContent();
 				queries.put(name, query);
 			}
 		} catch(IOException e) {
