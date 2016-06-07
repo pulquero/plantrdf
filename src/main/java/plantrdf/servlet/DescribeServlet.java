@@ -300,10 +300,7 @@ public class DescribeServlet extends HttpServlet {
 			String hashNamespace = resource + "#";
 			boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 			if (isHashNamespace) {
-				describeQuery = String.format(
-					"describe <%1$s> ?s " + "where {" + " select distinct ?s " + " where {"
-						+ "  filter(strstarts(str(?s), \"%2$s\"))" + "  ?s ?p ?o ." + " }" + "}",
-					resource, hashNamespace);
+				describeQuery = queries.get("describeHash");
 			} else {
 				describeQuery = queries.get("describeResource");
 			}
