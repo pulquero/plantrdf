@@ -1,0 +1,24 @@
+prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+
+construct
+{
+	?res ?_p1 ?_o1.
+	?ipni ?_p2 ?_o2.
+}
+where
+{
+	$resource a p:Plant.
+	$resource p:scientificName ?ipni.
+	?res p:scientificName ?ipni.
+	?res ?_p1 ?_o1.
+	?ipni ?_p2 ?_o2.
+	{
+		select (max(?ts) as ?latest)
+		where
+		{
+			?obs p:of $resource.
+			?obs p:on ?ts.
+			?obs p:watered true.
+		}
+	}
+}

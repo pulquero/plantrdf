@@ -10,11 +10,13 @@ import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
@@ -22,7 +24,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -36,16 +40,9 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import plantrdf.content.text.BooleanContentHandler;
 import plantrdf.util.SAXParserFactoryPooledObjectFactory;
-import plantrdf.util.TransformerFactoryPooledObjectFactory;
 
 public class DescribeServlet extends HttpServlet {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -5798564486501498686L;
-
-	private static final String PLANT_CLASS = "http://plantrdf-morethancode.rhcloud.com/schema#Plant";
-	private static final String SCIENTIFIC_NAME_PROPERTY = "http://plantrdf-morethancode.rhcloud.com/schema#scientificName";
 
 	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
 	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
@@ -73,14 +70,18 @@ public class DescribeServlet extends HttpServlet {
 	private String sesameUrl;
 	private PasswordAuthentication credentials;
 	private ObjectPool<SAXParserFactory> parserFactoryPool;
-	private ObjectPool<TransformerFactory> transformerFactoryPool;
+	private Map<String,String> queries;
+	private Templates describeXslt;
+	private Templates plantXslt;
 
 	@Override
 	public void init() throws ServletException {
+		ServletContext ctx = getServletContext();
 		sesameUrl = getInitParameter("sesameUrl");
 		String username = getInitParameter("username");
 		String password = getInitParameter("password");
 		credentials = new PasswordAuthentication(username, password.toCharArray());
+		queries = loadQueries(ctx);
 		GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
 		poolConfig.setMinIdle(1);
 		poolConfig.setSoftMinEvictableIdleTimeMillis(TimeUnit.SECONDS.toMillis(10l));
@@ -90,7 +91,9 @@ public class DescribeServlet extends HttpServlet {
 		poolConfig.setTestOnReturn(false);
 		poolConfig.setTestWhileIdle(false);
 		parserFactoryPool = new GenericObjectPool<>(new SAXParserFactoryPooledObjectFactory(), poolConfig);
-		transformerFactoryPool = new GenericObjectPool<>(new TransformerFactoryPooledObjectFactory(), poolConfig);
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		describeXslt = createTemplates(transformerFactory, "describe.xsl", ctx);
+		plantXslt = createTemplates(transformerFactory, "plant.xsl", ctx);
 
 		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
 			@Override
@@ -103,10 +106,33 @@ public class DescribeServlet extends HttpServlet {
 		});
 	}
 
+	private static Templates createTemplates(TransformerFactory tf, String xslt, ServletContext ctx) throws ServletException
+	{
+		try {
+			return tf.newTemplates(new StreamSource(ctx.getResource("/WEB-INF/xsl/"+xslt).toString()));
+		} catch (TransformerConfigurationException | MalformedURLException e) {
+			throw new ServletException(e);
+		}
+	}
+
+	private static Map<String,String> loadQueries(ServletContext ctx) throws ServletException
+	{
+		Map<String,String> queries = new HashMap<>();
+		try {
+			for(String queryFile : ctx.getResourcePaths("/WEB-INF/queries/")) {
+				String name = queryFile.substring(queryFile.lastIndexOf('/')+1, queryFile.lastIndexOf('.'));
+				String query = ctx.getResource(queryFile).getContent().toString();
+				queries.put(name, query);
+			}
+		} catch(IOException e) {
+			throw new ServletException(e);
+		}
+		return queries;
+	}
+
 	@Override
 	public void destroy() {
 		parserFactoryPool.close();
-		transformerFactoryPool.close();
 	}
 
 	@Override
@@ -144,14 +170,7 @@ public class DescribeServlet extends HttpServlet {
 
 		PASSWORD_AUTH.set(credentials);
 		try {
-			String hashNamespace = resource + "#";
-			String existsQuery = String.format("ask where { {<%1$s> ?p ?o} union "
-				+ " {"
-				+ "  filter(strstarts(str(?s), \"%2$s\"))"
-				+ "  ?s ?p ?o ."
-				+ " }"
-				+ "}", resource, hashNamespace);
-			if(!ask(queryUrl(endpoint, existsQuery))) {
+			if(!ask(queryUrl(endpoint, queries.get("exists"), Collections.singletonMap("resource", iri(resource))))) {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
@@ -167,8 +186,7 @@ public class DescribeServlet extends HttpServlet {
 
 			if (!isRedirected && acceptHtml) {
 				String redirectUrl;
-				String isPlantQuery = String.format("ask where {<%1$s> a <%2$s>}", resource, PLANT_CLASS);
-				if (ask(queryUrl(endpoint, isPlantQuery))) {
+				if (ask(queryUrl(endpoint, queries.get("isPlant"), Collections.singletonMap("resource", iri(resource))))) {
 					boolean doObserve = false;
 					Cookie[] cookies = req.getCookies();
 					if(cookies != null) {
@@ -272,22 +290,13 @@ public class DescribeServlet extends HttpServlet {
 			throw new IOException(e);
 		}
 
-		String stylesheet;
+		Templates stylesheet;
 		String describeQuery;
 		if (VIEW_PLANT_ACTION.equals(action)) {
-			stylesheet = "plant.xsl";
-			describeQuery = String.format("construct {"
-					+ "  ?res ?_p1 ?_o1 ."
-					+ "  ?ipni ?_p2 ?_o2 ."
-					+ " } where {"
-					+ "  <%1$s> a <%2$s> ."
-					+ "  <%1$s> <%3$s> ?ipni ."
-					+ "  ?res <%3$s> ?ipni ."
-					+ "  ?res ?_p1 ?_o1 ."
-					+ "  ?ipni ?_p2 ?_o2 ."
-					+ " }", resource, PLANT_CLASS, SCIENTIFIC_NAME_PROPERTY);
+			stylesheet = plantXslt;
+			describeQuery = queries.get("describePlant");
 		} else {
-			stylesheet = "describe.xsl";
+			stylesheet = describeXslt;
 			String hashNamespace = resource + "#";
 			boolean isHashNamespace = nsMap.containsKey(hashNamespace);
 			if (isHashNamespace) {
@@ -296,30 +305,23 @@ public class DescribeServlet extends HttpServlet {
 						+ "  filter(strstarts(str(?s), \"%2$s\"))" + "  ?s ?p ?o ." + " }" + "}",
 					resource, hashNamespace);
 			} else {
-				describeQuery = String.format("describe <%s>", resource);
+				describeQuery = queries.get("describeResource");
 			}
 		}
-		URL xslUrl = createUrl(req, stylesheet);
-		URL describeUrl = queryUrl(endpoint, describeQuery);
+		URL describeUrl = queryUrl(endpoint, describeQuery, Collections.singletonMap("resource", iri(resource)));
 
 		if (contentType.startsWith(HTML_CONTENT_TYPE)) {
 			resp.setContentType(contentType);
 			try {
-				TransformerFactory transformerFactory = transformerFactoryPool.borrowObject();
-				try {
-					Transformer transformer = transformerFactory
-							.newTransformer(new StreamSource(xslUrl.toString()));
-					transformer.setParameter("resource", resource);
-					if (EDIT_ACTION.equals(action)) {
-						transformer.setParameter("graph", graph);
-						transformer.setParameter("updateEndpoint", new URL(endpoint, "/statements").toString());
-					}
-					try (InputStream describeIn = rdf(describeUrl)) {
-						transformer.transform(new StreamSource(describeIn, describeUrl.toString()),
-								new StreamResult(resp.getOutputStream()));
-					}
-				} finally {
-					transformerFactoryPool.returnObject(transformerFactory);
+				Transformer transformer = stylesheet.newTransformer();
+				transformer.setParameter("resource", resource);
+				if (EDIT_ACTION.equals(action)) {
+					transformer.setParameter("graph", graph);
+					transformer.setParameter("updateEndpoint", new URL(endpoint, "/statements").toString());
+				}
+				try (InputStream describeIn = rdf(describeUrl)) {
+					transformer.transform(new StreamSource(describeIn, describeUrl.toString()),
+							new StreamResult(resp.getOutputStream()));
 				}
 			} catch (Exception e) {
 				throw new IOException(e);
@@ -341,8 +343,17 @@ public class DescribeServlet extends HttpServlet {
 		return conn.getInputStream();
 	}
 
-	private static URL queryUrl(URL endpoint, String query) throws IOException {
-		return new URL(endpoint, endpoint.getPath()+"?query=" + URLEncoder.encode(query, "UTF-8"));
+	private static URL queryUrl(URL endpoint, String query, Map<String,String> params) throws IOException {
+		StringBuilder buf = new StringBuilder(endpoint.getPath());
+		buf.append("?query=").append(URLEncoder.encode(query, "UTF-8"));
+		for(Map.Entry<String,String> entry : params.entrySet()) {
+			buf.append("&$").append(entry.getKey()).append("=").append(entry.getValue());
+		}
+		return new URL(endpoint, buf.toString());
+	}
+
+	private static String iri(String value) {
+		return "<"+value+">";
 	}
 
 	private static URL createUrl(HttpServletRequest req, String path) throws MalformedURLException {

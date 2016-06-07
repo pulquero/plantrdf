@@ -1,0 +1,10 @@
+describe $resource ?s
+where
+{
+	select distinct ?s
+	where
+	{
+		?s ?p ?o.
+		filter(strstarts(str(?s), concat(str($resource), '#')))
+	}
+}
