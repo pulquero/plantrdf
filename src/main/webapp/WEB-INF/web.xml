@@ -11,7 +11,7 @@
 		<servlet-class>plantrdf.servlet.DescribeServlet</servlet-class>
 		<init-param>
 			<param-name>sesameUrl</param-name>
-			<param-value>/openrdf-sesame/</param-value>
+			<param-value>/rdf4j-server/</param-value>
 		</init-param>
 		<init-param>
 			<param-name>username</param-name>
@@ -22,10 +22,17 @@
 			<param-value>m3tl</param-value>
 		</init-param>
 	</servlet>
+	<servlet>
+		<servlet-name>JmxMiniConsole</servlet-name>
+		<servlet-class>org.jminix.console.servlet.MiniConsoleServlet</servlet-class>
+	</servlet>
+
 	<servlet-mapping>
 		<servlet-name>Describe</servlet-name>
 		<url-pattern>/gardens/*</url-pattern>
 	</servlet-mapping>
-
+	<servlet-mapping>
+		<servlet-name>JmxMiniConsole</servlet-name>
+		<url-pattern>/management/*</url-pattern>
+	</servlet-mapping>
 </web-app>
-
