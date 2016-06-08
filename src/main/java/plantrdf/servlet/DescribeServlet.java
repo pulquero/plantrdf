@@ -3,9 +3,6 @@ package plantrdf.servlet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Authenticator;
-import java.net.ContentHandler;
-import java.net.ContentHandlerFactory;
-import java.net.FileNameMap;
 import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
@@ -39,7 +36,6 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import plantrdf.content.text.BooleanContentHandler;
 import plantrdf.util.SAXParserFactoryPooledObjectFactory;
 
 public class DescribeServlet extends HttpServlet {
@@ -108,7 +104,18 @@ public class DescribeServlet extends HttpServlet {
 		try {
 			for(String queryFile : ctx.getResourcePaths("/WEB-INF/queries/")) {
 				String name = queryFile.substring(queryFile.lastIndexOf('/')+1, queryFile.lastIndexOf('.'));
-				String query = (String) ctx.getResource(queryFile).getContent();
+				URLConnection queryConn = ctx.getResource(queryFile).openConnection();
+				Object queryContent = queryConn.getContent(new Class[] {String.class, InputStream.class});
+				String query;
+				if(queryContent instanceof String) {
+					query = (String) queryContent;
+				}
+				else if(queryContent instanceof InputStream) {
+					query = plantrdf.content.application.sparql_query.getContent((InputStream) queryContent);
+				}
+				else {
+					throw new ServletException("No suitable ContentHandler for "+queryConn.getURL()+" ("+queryConn.getContentType()+")");
+				}
 				queries.put(name, query);
 			}
 		} catch(IOException e) {
