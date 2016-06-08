@@ -45,11 +45,6 @@ import plantrdf.util.SAXParserFactoryPooledObjectFactory;
 public class DescribeServlet extends HttpServlet {
 	private static final long serialVersionUID = -5798564486501498686L;
 
-	private static final String HTML_CONTENT_TYPE = "application/xhtml+xml";
-	private static final String RDF_CONTENT_TYPE = "application/rdf+xml";
-	private static final String BOOLEAN_CONTENT_TYPE = "text/boolean";
-	private static final String SPARQL_QUERY_CONTENT_TYPE = "application/sparql-query";
-
 	private static final String ACCEPT_HEADER = "Accept";
 
 	private static final String HTML_EXT = "html";
@@ -78,28 +73,6 @@ public class DescribeServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {
-		URLConnection.setFileNameMap(new FileNameMap() {
-			private FileNameMap delegate = URLConnection.getFileNameMap();
-			@Override
-			public String getContentTypeFor(String fileName) {
-				if(fileName.endsWith(".rq")) {
-					return SPARQL_QUERY_CONTENT_TYPE;
-				}
-				return delegate.getContentTypeFor(fileName);
-			}
-		});
-		URLConnection.setContentHandlerFactory(new ContentHandlerFactory() {
-			@Override
-			public ContentHandler createContentHandler(String mimetype) {
-				if (BOOLEAN_CONTENT_TYPE.equals(mimetype)) {
-					return new BooleanContentHandler();
-				} else if (SPARQL_QUERY_CONTENT_TYPE.equals(mimetype)) {
-					return new plantrdf.content.application.sparql_query();
-				}
-				return null;
-			}
-		});
-
 		ServletContext ctx = getServletContext();
 		sesameUrl = getInitParameter("sesameUrl");
 		String username = getInitParameter("username");
@@ -229,9 +202,9 @@ public class DescribeServlet extends HttpServlet {
 			else {
 				String contentType;
 				if(showHtml) {
-					contentType = HTML_CONTENT_TYPE;
+					contentType = MediaTypes.HTML_CONTENT_TYPE;
 				} else {
-					contentType = RDF_CONTENT_TYPE;
+					contentType = MediaTypes.RDF_CONTENT_TYPE;
 				}
 				doRdf(endpoint, graph, resource, contentType, action, req, resp);
 			}
@@ -321,7 +294,7 @@ public class DescribeServlet extends HttpServlet {
 		}
 		URL describeUrl = queryUrl(endpoint, describeQuery, Collections.singletonMap("resource", iri(resource)));
 
-		if (contentType.startsWith(HTML_CONTENT_TYPE)) {
+		if (contentType.startsWith(MediaTypes.HTML_CONTENT_TYPE)) {
 			resp.setContentType(contentType);
 			try {
 				Transformer transformer = stylesheet.newTransformer();
@@ -344,13 +317,13 @@ public class DescribeServlet extends HttpServlet {
 
 	private static boolean ask(URL queryUrl) throws IOException {
 		URLConnection conn = queryUrl.openConnection();
-		conn.setRequestProperty(ACCEPT_HEADER, BOOLEAN_CONTENT_TYPE);
+		conn.setRequestProperty(ACCEPT_HEADER, MediaTypes.BOOLEAN_CONTENT_TYPE);
 		return (Boolean) conn.getContent(new Class[] {Boolean.class});
 	}
 
 	private static InputStream rdf(URL queryUrl) throws IOException {
 		URLConnection conn = queryUrl.openConnection();
-		conn.setRequestProperty(ACCEPT_HEADER, RDF_CONTENT_TYPE);
+		conn.setRequestProperty(ACCEPT_HEADER, MediaTypes.RDF_CONTENT_TYPE);
 		return conn.getInputStream();
 	}
 
