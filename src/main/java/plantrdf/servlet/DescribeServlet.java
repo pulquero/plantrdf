@@ -78,25 +78,6 @@ public class DescribeServlet extends HttpServlet {
 
 	@Override
 	public void init() throws ServletException {
-		ServletContext ctx = getServletContext();
-		sesameUrl = getInitParameter("sesameUrl");
-		String username = getInitParameter("username");
-		String password = getInitParameter("password");
-		credentials = new PasswordAuthentication(username, password.toCharArray());
-		queries = loadQueries(ctx);
-		GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-		poolConfig.setMinIdle(1);
-		poolConfig.setSoftMinEvictableIdleTimeMillis(TimeUnit.SECONDS.toMillis(10l));
-		poolConfig.setTimeBetweenEvictionRunsMillis(TimeUnit.MINUTES.toMillis(1l));
-		poolConfig.setTestOnBorrow(false);
-		poolConfig.setTestOnCreate(false);
-		poolConfig.setTestOnReturn(false);
-		poolConfig.setTestWhileIdle(false);
-		parserFactoryPool = new GenericObjectPool<>(new SAXParserFactoryPooledObjectFactory(), poolConfig);
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
-		describeXslt = createTemplates(transformerFactory, "describe.xsl", ctx);
-		plantXslt = createTemplates(transformerFactory, "plant.xsl", ctx);
-
 		URLConnection.setFileNameMap(new FileNameMap() {
 			private FileNameMap delegate = URLConnection.getFileNameMap();
 			@Override
@@ -118,6 +99,25 @@ public class DescribeServlet extends HttpServlet {
 				return null;
 			}
 		});
+
+		ServletContext ctx = getServletContext();
+		sesameUrl = getInitParameter("sesameUrl");
+		String username = getInitParameter("username");
+		String password = getInitParameter("password");
+		credentials = new PasswordAuthentication(username, password.toCharArray());
+		queries = loadQueries(ctx);
+		GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+		poolConfig.setMinIdle(1);
+		poolConfig.setSoftMinEvictableIdleTimeMillis(TimeUnit.SECONDS.toMillis(10l));
+		poolConfig.setTimeBetweenEvictionRunsMillis(TimeUnit.MINUTES.toMillis(1l));
+		poolConfig.setTestOnBorrow(false);
+		poolConfig.setTestOnCreate(false);
+		poolConfig.setTestOnReturn(false);
+		poolConfig.setTestWhileIdle(false);
+		parserFactoryPool = new GenericObjectPool<>(new SAXParserFactoryPooledObjectFactory(), poolConfig);
+		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		describeXslt = createTemplates(transformerFactory, "describe.xsl", ctx);
+		plantXslt = createTemplates(transformerFactory, "plant.xsl", ctx);
 	}
 
 	private static Templates createTemplates(TransformerFactory tf, String xslt, ServletContext ctx) throws ServletException
