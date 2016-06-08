@@ -336,9 +336,9 @@ public class DescribeServlet extends HttpServlet {
 
 	private static URL queryUrl(URL endpoint, String query, Map<String,String> params) throws IOException {
 		StringBuilder buf = new StringBuilder(endpoint.getPath());
-		buf.append("?query=").append(URLEncoder.encode(query, "UTF-8"));
+		buf.append("?query=").append(URLEncoder.encode(query.replaceAll("\\s+", " "), "UTF-8"));
 		for(Map.Entry<String,String> entry : params.entrySet()) {
-			buf.append("&$").append(entry.getKey()).append("=").append(entry.getValue());
+			buf.append("&$").append(entry.getKey()).append("=").append(URLEncoder.encode(entry.getValue(), "UTF-8"));
 		}
 		return new URL(endpoint, buf.toString());
 	}
