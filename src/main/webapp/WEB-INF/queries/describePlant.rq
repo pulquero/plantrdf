@@ -7,8 +7,8 @@ construct
 }
 where
 {
-	$resource a p:Plant.
-	$resource p:scientificName ?ipni.
+	$r a p:Plant.
+	$r p:scientificName ?ipni.
 	?res p:scientificName ?ipni.
 	?res ?_p1 ?_o1.
 	?ipni ?_p2 ?_o2.

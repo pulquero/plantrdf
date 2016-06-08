@@ -3,5 +3,5 @@ prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 ask
 where
 {
-	$resource a p:Plant
+	$r a p:Plant
 }

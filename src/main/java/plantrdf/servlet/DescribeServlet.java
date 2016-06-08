@@ -164,7 +164,7 @@ public class DescribeServlet extends HttpServlet {
 
 		PASSWORD_AUTH.set(credentials);
 		try {
-			if(!ask(queryUrl(endpoint, queries.get("exists"), Collections.singletonMap("resource", iri(resource))))) {
+			if(!ask(queryUrl(endpoint, queries.get("exists"), Collections.singletonMap("r", iri(resource))))) {
 				resp.sendError(HttpServletResponse.SC_NOT_FOUND, String.format("No such resource: %s", resource));
 				return;
 			}
@@ -180,7 +180,7 @@ public class DescribeServlet extends HttpServlet {
 
 			if (!isRedirected && acceptHtml) {
 				String redirectUrl;
-				if (ask(queryUrl(endpoint, queries.get("isPlant"), Collections.singletonMap("resource", iri(resource))))) {
+				if (ask(queryUrl(endpoint, queries.get("isPlant"), Collections.singletonMap("r", iri(resource))))) {
 					boolean doObserve = false;
 					Cookie[] cookies = req.getCookies();
 					if(cookies != null) {
@@ -299,7 +299,7 @@ public class DescribeServlet extends HttpServlet {
 				describeQuery = queries.get("describeResource");
 			}
 		}
-		URL describeUrl = queryUrl(endpoint, describeQuery, Collections.singletonMap("resource", iri(resource)));
+		URL describeUrl = queryUrl(endpoint, describeQuery, Collections.singletonMap("r", iri(resource)));
 
 		if (contentType.startsWith(MediaTypes.HTML_CONTENT_TYPE)) {
 			resp.setContentType(contentType);

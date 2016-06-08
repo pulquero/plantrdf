@@ -1,10 +1,10 @@
-describe $resource ?s
+describe $r ?s
 where
 {
 	select distinct ?s
 	where
 	{
 		?s ?p ?o.
-		filter(strstarts(str(?s), concat(str($resource), '#')))
+		filter(strstarts(str(?s), concat(str($r), '#')))
 	}
 }
