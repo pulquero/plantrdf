@@ -2,11 +2,11 @@ ask
 where
 {
 	{
- 		$resource ?p ?o.
+ 		$r ?p ?o.
 	}
 	union
 	{
 		?s ?p ?o.
-		filter(strstarts(str(?s), concat(str($resource), '#')))
+		filter(strstarts(str(?s), concat(str($r), '#')))
 	}
 }
