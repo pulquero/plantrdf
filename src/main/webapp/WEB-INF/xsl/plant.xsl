@@ -5,17 +5,17 @@
 	xmlns:p="http://plantrdf-morethancode.rhcloud.com/schema#"
 	exclude-result-prefixes="rdf">
 
-	<xsl:template match="/rdf:rdf">
+	<xsl:template match="/">
 		<xsl:variable name="plant">
-		<xsl:value-of select="rdf:Description[rdf:type/@resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
+		<xsl:value-of select="/rdf:rdf/rdf:Description[rdf:type/@resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
 		</xsl:variable>
 		<html>
 			<head>
 			</head>
 			<body>
-				<h1><xsl:value-of select="rdf:Description[@rdf:about=$plant]/rdfs:label"/></h1>
+				<h1><xsl:value-of select="/rdf:rdf/rdf:Description[@rdf:about=$plant]/rdfs:label"/></h1>
 				<table>
-				<tr><th>Last watered:</th><td><xsl:value-of select="rdf:Description[@rdf:about=$plant]/p:lastWateredOn"/></td></tr>
+				<tr><th>Last watered:</th><td><xsl:value-of select="/rdf:rdf/rdf:Description[@rdf:about=$plant]/p:lastWatered"/></td></tr>
 				</table>
 			</body>
 		</html>
