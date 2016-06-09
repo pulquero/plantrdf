@@ -7,7 +7,7 @@
 
 	<xsl:template match="/">
 		<xsl:variable name="plant">
-		<xsl:value-of select="/rdf:RDF/rdf:Description[rdf:type/@resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
+		<xsl:value-of select="/rdf:RDF/rdf:Description[rdf:type/@rdf:resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
 		</xsl:variable>
 		<html>
 			<head>
@@ -17,7 +17,6 @@
 				<table>
 				<tr><th>Last watered:</th><td><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/p:lastWatered"/></td></tr>
 				</table>
-				<xsl:copy-of select="/"/>
 			</body>
 		</html>
 	</xsl:template>
