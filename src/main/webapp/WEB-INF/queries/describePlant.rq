@@ -2,21 +2,22 @@ prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 
 construct
 {
-	?res ?_p1 ?_o1.
+	?s ?_p1 ?_o1.
 	?ipni ?_p2 ?_o2.
 }
 where
 {
 	$r a p:Plant.
 	$r p:scientificName ?ipni.
-	?res p:scientificName ?ipni.
-	?res ?_p1 ?_o1.
+	?s p:scientificName ?ipni.
+	?s ?_p1 ?_o1.
 	?ipni ?_p2 ?_o2.
+	optional
 	{
 		select (max(?ts) as ?latest)
 		where
 		{
-			?obs p:of $resource.
+			?obs p:of $r.
 			?obs p:on ?ts.
 			?obs p:watered true.
 		}
