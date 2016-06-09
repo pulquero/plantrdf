@@ -17,6 +17,7 @@
 				<table>
 				<tr><th>Last watered:</th><td><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/p:lastWatered"/></td></tr>
 				</table>
+				<xsl:copy-of select="/"/>
 			</body>
 		</html>
 	</xsl:template>
