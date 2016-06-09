@@ -13,6 +13,7 @@
 			</head>
 			<body>
 				<h1><xsl:value-of select="rdf:RDF/rdf:Description[@rdf:about=$plant]/rdfs:label"/></h1>
+				<xsl:copy-of select="/"/>
 			</body>
 		</html>
 	</xsl:template>

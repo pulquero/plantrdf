@@ -92,8 +92,11 @@ public class DescribeServlet extends HttpServlet {
 	private static Templates createTemplates(TransformerFactory tf, String xslt, ServletContext ctx) throws ServletException
 	{
 		try {
-			return tf.newTemplates(new StreamSource(ctx.getResource("/WEB-INF/xsl/"+xslt).toString()));
-		} catch (TransformerConfigurationException | MalformedURLException e) {
+			URL url = ctx.getResource("/WEB-INF/xsl/"+xslt);
+			try(InputStream in = url.openStream()) {
+				return tf.newTemplates(new StreamSource(in, url.toString()));
+			}
+		} catch (TransformerConfigurationException | IOException e) {
 			throw new ServletException(e);
 		}
 	}
