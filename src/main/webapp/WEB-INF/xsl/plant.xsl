@@ -21,12 +21,12 @@
 	</xsl:template>
 
 	<xsl:template match="rdf:Description" mode="plant">
-	<table style="th:after {{content: ':'}}">
-	<xsl:apply-templates select="node()"/>
+	<table id="{@rdf:about}" style="th:after {{content: ':'}}">
+	<xsl:apply-templates select="*"/>
 	</table>
 	</xsl:template>
 
-	<xsl:template match="node()">
-		<tr><th><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=name()]/rdfs:label"/></th><td><xsl:value-of select="."/></td></tr>
+	<xsl:template match="*">
+		<tr id="{name()}"><th><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=name()]/rdfs:label"/></th><td><xsl:value-of select="."/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>
