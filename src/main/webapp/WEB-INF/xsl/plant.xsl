@@ -5,10 +5,11 @@
 	xmlns:p="http://plantrdf-morethancode.rhcloud.com/schema#"
 	exclude-result-prefixes="rdf">
 
+	<xsl:variable name="plant">
+	<xsl:value-of select="/rdf:RDF/rdf:Description[rdf:type/@rdf:resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
+	</xsl:variable>
+
 	<xsl:template match="/">
-		<xsl:variable name="plant">
-		<xsl:value-of select="/rdf:RDF/rdf:Description[rdf:type/@rdf:resource='http://plantrdf-morethancode.rhcloud.com/schema#Plant']/@rdf:about"/>
-		</xsl:variable>
 		<html>
 			<head>
 			</head>
@@ -21,11 +22,11 @@
 
 	<xsl:template match="rdf:Description" mode="plant">
 	<table style="th:after {{content: ':'}}">
-	<xsl:apply-templates/>
+	<xsl:apply-templates select="node()"/>
 	</table>
 	</xsl:template>
 
-	<xsl:template match="node()[../rdf:Description]">
+	<xsl:template match="node()">
 		<tr><th><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=name()]/rdfs:label"/></th><td><xsl:value-of select="."/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>

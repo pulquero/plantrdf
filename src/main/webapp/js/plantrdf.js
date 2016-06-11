@@ -49,6 +49,11 @@ queries = {
 					?zspecies p:hardiness ?zhardiness .
 				}
 			}
+			optional
+			{
+				?plant p:endedOn ?endDate .
+			}
+			filter(!bound(?endDate))
 		}
 		order by ?plant
 		`;
