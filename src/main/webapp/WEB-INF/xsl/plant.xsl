@@ -20,7 +20,7 @@
 	</xsl:template>
 
 	<xsl:template match="rdf:Description" mode="plant">
-	<table style="th:after {content: ':'}">
+	<table style="th:after {{content: ':'}}">
 	<xsl:apply-templates/>
 	</table>
 	</xsl:template>
