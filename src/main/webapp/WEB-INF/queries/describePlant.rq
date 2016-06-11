@@ -2,6 +2,7 @@ prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 
 construct
 {
+	p:lastWatered rdfs:label 'Last watered'.
 	$r p:lastWatered ?latest.
 	?s ?_p1 ?_o1.
 	?ipni ?_p2 ?_o2.

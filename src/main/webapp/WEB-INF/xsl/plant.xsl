@@ -14,10 +14,18 @@
 			</head>
 			<body>
 				<h1><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/rdfs:label"/></h1>
-				<table>
-				<tr><th>Last watered:</th><td><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/p:lastWatered"/></td></tr>
-				</table>
+				<xsl:apply-templates select="/rdf:RDF/rdf:Description[@rdf:about=$plant]" mode="plant"/>
 			</body>
 		</html>
+	</xsl:template>
+
+	<xsl:template match="rdf:Description" mode="plant">
+	<table style="th:after {content: ':'}">
+	<xsl:apply-templates/>
+	</table>
+	</xsl:template>
+
+	<xsl:template match="node()[../rdf:Description]">
+		<tr><th><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=name()]/rdfs:label"/></th><td><xsl:value-of select="."/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>
