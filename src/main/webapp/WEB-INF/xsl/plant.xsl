@@ -15,18 +15,17 @@
 			</head>
 			<body>
 				<h1><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/rdfs:label"/></h1>
-				<xsl:apply-templates select="/rdf:RDF/rdf:Description[@rdf:about=$plant]" mode="plant"/>
+				<table style="th:after {{content: ':'}}">
+				<xsl:apply-templates select="/rdf:RDF/rdf:Description[@rdf:about=$plant]/*"/>
+				</table>
 			</body>
 		</html>
 	</xsl:template>
 
-	<xsl:template match="rdf:Description" mode="plant">
-	<table id="{@rdf:about}" style="th:after {{content: ':'}}">
-	<xsl:apply-templates select="*"/>
-	</table>
-	</xsl:template>
-
 	<xsl:template match="*">
-		<tr id="{name()}"><th><xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=name()]/rdfs:label"/></th><td><xsl:value-of select="."/></td></tr>
+		<xsl:variable name="label">
+		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=concat(namespace-uri(),name())]/rdfs:label"/>
+		</xsl:variable>
+		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select=".[name()!='rdfs:label' and $label]"/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>
