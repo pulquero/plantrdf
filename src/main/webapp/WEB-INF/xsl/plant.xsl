@@ -24,11 +24,13 @@
 
 	<xsl:template match="*">
 		<xsl:variable name="property">
-		<xsl:value-of select="concat(namespace-uri(),name())"/>
+		<xsl:value-of select="concat(namespace-uri(),local-name())"/>
 		</xsl:variable>
 		<xsl:variable name="label">
 		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$property]/rdfs:label"/>
 		</xsl:variable>
-		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select="$property"/></td></tr>
+		<xsl:if test="name()!='rdfs:label' and $label">
+		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select="text()"/></td></tr>
+		</xsl:if>
 	</xsl:template>
 </xsl:stylesheet>
