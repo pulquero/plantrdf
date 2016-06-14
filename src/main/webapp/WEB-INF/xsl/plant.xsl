@@ -23,9 +23,12 @@
 	</xsl:template>
 
 	<xsl:template match="*">
-		<xsl:variable name="label">
-		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=concat(namespace-uri(),name())]/rdfs:label"/>
+		<xsl:variable name="property">
+		<xsl:value-of select="concat(namespace-uri(),name())"/>
 		</xsl:variable>
-		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select=".[name()!='rdfs:label' and $label]"/></td></tr>
+		<xsl:variable name="label">
+		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$property]/rdfs:label"/>
+		</xsl:variable>
+		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select=".[$property!='http://www.w3.org/2000/01/rdf-schema#label' and $label]"/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>
