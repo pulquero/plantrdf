@@ -4,16 +4,29 @@ construct
 {
 	p:lastWatered rdfs:label 'Last watered'.
 	$r p:lastWatered ?latest.
-	?s ?_p1 ?_o1.
-	?ipni ?_p2 ?_o2.
+	$r ?_pr ?_or.
+	?s ?_ps ?_os.
+	?ipni ?_pn ?_on.
 }
 where
 {
-	$r a p:Plant.
-	$r p:scientificName ?ipni.
-	?s p:scientificName ?ipni.
-	?s ?_p1 ?_o1.
-	?ipni ?_p2 ?_o2.
+	graph $g
+	{
+		$r a p:Plant.
+		$r ?_pr ?_or.
+		$r p:scientificName ?ipni.
+	}
+	graph ?_gs
+	{
+		?s p:scientificName ?ipni.
+	}
+	filter(?_gs != $g)
+	?s ?_ps ?_os.
+	optional
+	{
+		bind(iri(substr(str(?ipni),strlen('http://ipni.org/')+1)) as ?lsid)
+		?lsid ?_pn ?_on.
+	}
 	optional
 	{
 		select (max(?ts) as ?latest)
