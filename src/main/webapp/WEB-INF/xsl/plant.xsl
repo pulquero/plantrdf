@@ -29,6 +29,6 @@
 		<xsl:variable name="label">
 		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$property]/rdfs:label"/>
 		</xsl:variable>
-		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select=".[$property!='http://www.w3.org/2000/01/rdf-schema#label' and $label]"/></td></tr>
+		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select="$property"/></td></tr>
 	</xsl:template>
 </xsl:stylesheet>
