@@ -3,5 +3,8 @@ prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
 ask
 where
 {
-	$r a p:Plant
+	graph $g
+	{
+		$r a p:Plant
+	}
 }

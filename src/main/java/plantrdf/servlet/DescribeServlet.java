@@ -183,7 +183,10 @@ public class DescribeServlet extends HttpServlet {
 
 			if (!isRedirected && acceptHtml) {
 				String redirectUrl;
-				if (ask(queryUrl(endpoint, queries.get("isPlant"), Collections.singletonMap("r", iri(resource))))) {
+				Map<String,String> bindings = new HashMap<>();
+				bindings.put("r", iri(resource));
+				bindings.put("g", iri(graph));
+				if (ask(queryUrl(endpoint, queries.get("isPlant"), bindings))) {
 					boolean doObserve = false;
 					Cookie[] cookies = req.getCookies();
 					if(cookies != null) {
@@ -302,7 +305,10 @@ public class DescribeServlet extends HttpServlet {
 				describeQuery = queries.get("describeResource");
 			}
 		}
-		URL describeUrl = queryUrl(endpoint, describeQuery, Collections.singletonMap("r", iri(resource)));
+		Map<String,String> bindings = new HashMap<>();
+		bindings.put("r", iri(resource));
+		bindings.put("g", iri(graph));
+		URL describeUrl = queryUrl(endpoint, describeQuery, bindings);
 
 		if (contentType.startsWith(MediaTypes.HTML_CONTENT_TYPE)) {
 			resp.setContentType(contentType);
