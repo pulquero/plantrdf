@@ -29,7 +29,7 @@
 		<xsl:variable name="label">
 		<xsl:value-of select="/rdf:RDF/rdf:Description[@rdf:about=$property]/rdfs:label"/>
 		</xsl:variable>
-		<xsl:if test="name()!='rdfs:label' and $label">
+		<xsl:if test="name()!='rdfs:label' and $label!=''">
 		<tr><th><xsl:value-of select="$label"/></th><td><xsl:value-of select="text()"/></td></tr>
 		</xsl:if>
 	</xsl:template>
