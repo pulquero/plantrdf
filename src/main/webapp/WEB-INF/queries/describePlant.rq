@@ -16,12 +16,15 @@ where
 		$r ?_pr ?_or.
 		$r p:scientificName ?ipni.
 	}
-	graph ?_gs
+	optional
 	{
-		?s p:scientificName ?ipni.
+		graph ?_gs
+		{
+			?s p:scientificName ?ipni.
+		}
+		filter(?_gs != $g)
+		?s ?_ps ?_os.
 	}
-	filter(?_gs != $g)
-	?s ?_ps ?_os.
 	optional
 	{
 		bind(iri(substr(str(?ipni),strlen('http://ipni.org/')+1)) as ?lsid)
