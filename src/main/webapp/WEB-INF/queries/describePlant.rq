@@ -5,8 +5,7 @@ construct
 	p:lastWatered rdfs:label 'Last watered'.
 	$r p:lastWatered ?latest.
 	$r ?_pr ?_or.
-	?s ?_ps ?_os.
-	?ipni ?_pn ?_on.
+	?r ?_ps ?_os.
 }
 where
 {
@@ -24,11 +23,6 @@ where
 		}
 		filter(?_gs != $g)
 		?s ?_ps ?_os.
-	}
-	optional
-	{
-		bind(iri(substr(str(?ipni),strlen('http://ipni.org/')+1)) as ?lsid)
-		?lsid ?_pn ?_on.
 	}
 	optional
 	{
