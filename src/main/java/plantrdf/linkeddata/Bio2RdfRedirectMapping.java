@@ -7,6 +7,9 @@
  */
 package plantrdf.linkeddata;
 
+import java.net.URL;
+
+import net.fortytwo.linkeddata.dereferencers.RedirectMapping;
 
 /**
  * @author markh
@@ -14,4 +17,10 @@ package plantrdf.linkeddata;
  */
 public class Bio2RdfRedirectMapping implements RedirectMapping {
 
+	@Override
+	public String translate(String redirectUrl, URL originalUrl) {
+		String host = originalUrl.getHost();
+		int port = originalUrl.getPort();
+		return redirectUrl.replace("localhost:8890", host + ":" + port);
+	}
 }
