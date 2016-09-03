@@ -1,0 +1,18 @@
+prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+
+insert
+{
+	graph <http://ipni.org/>
+	{
+    	?lsid p:scientificName ?ipni.
+    }
+}
+where
+{
+	graph <http://plantrdf-morethancode.rhcloud.com/gardens/mexilandia>
+	{
+		?p a p:Plant.
+		?p p:scientificName ?ipni.
+	}
+	bind(iri(substr(str(?ipni),strlen('http://ipni.org/')+1)) as ?lsid)
+}
