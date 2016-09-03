@@ -1,8 +1,12 @@
 prefix p: <http://plantrdf-morethancode.rhcloud.com/schema#>
+prefix tn: <http://rs.tdwg.org/ontology/voc/TaxonName#>
 
 construct
 {
 	p:lastWatered rdfs:label 'Last watered'.
+	tn:genusPart rdfs:label 'Genus'.
+	tn:specificEpithet rdfs:label 'Species'.
+	tn:infraspecificEpithet rdfs:label 'Infraspecific'.
 	$r p:lastWatered ?latest.
 	$r ?_pr ?_or.
 	?r ?_ps ?_os.
