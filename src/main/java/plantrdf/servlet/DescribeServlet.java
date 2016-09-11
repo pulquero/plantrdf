@@ -338,12 +338,14 @@ public class DescribeServlet extends HttpServlet {
 	}
 
 	private static InputStream rdf(URL queryUrl) throws IOException {
-		URLConnection conn = queryUrl.openConnection();
+		URLConnection conn = new URL(queryUrl.toString() + "&distinct=true").openConnection();
 		conn.setRequestProperty(ACCEPT_HEADER, MediaTypes.RDF_CONTENT_TYPE);
 		return conn.getInputStream();
 	}
 
-	private static URL queryUrl(URL endpoint, String query, Map<String,String> params) throws IOException {
+	private static URL queryUrl(URL endpoint, String query, Map<String, String> params)
+		throws IOException
+	{
 		StringBuilder buf = new StringBuilder(endpoint.getPath());
 		buf.append("?query=").append(URLEncoder.encode(query.replaceAll("\\s+", " "), "UTF-8"));
 		for(Map.Entry<String,String> entry : params.entrySet()) {
