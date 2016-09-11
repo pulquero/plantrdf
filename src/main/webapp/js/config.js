@@ -1,1 +1,1 @@
-const SESAME_URL = "http://plantrdf-morethancode.rhcloud.com/rdf4j-server/";
+const SESAME_URL = "http://plantrdf-plantrdf.193b.starter-ca-central-1.openshiftapps.com/rdf4j-server/";

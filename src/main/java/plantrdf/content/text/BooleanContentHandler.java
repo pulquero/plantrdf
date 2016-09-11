@@ -6,13 +6,20 @@ import java.net.ContentHandler;
 import java.net.URLConnection;
 
 public class BooleanContentHandler extends ContentHandler {
-	@Override
-	public Object getContent(URLConnection urlc) throws IOException {
+	public static boolean getContent(InputStream in) throws IOException {
 		byte[] buf = new byte[5];
 		int len;
-		try(InputStream in = urlc.getInputStream()) {
+		try {
 			len = in.read(buf);
 		}
+		finally {
+			in.close();
+		}
 		return "true".equals(new String(buf, 0, len, "US-ASCII"));
+	}
+
+	@Override
+	public Object getContent(URLConnection urlc) throws IOException {
+		return getContent(urlc.getInputStream());
 	}
 }

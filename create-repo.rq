@@ -1,0 +1,33 @@
+
+insert {
+	?g <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openrdf.org/config/repository#RepositoryContext> .
+	graph ?g {
+		[
+			<http://www.openrdf.org/config/repository#repositoryID> ?id ;
+			<http://www.openrdf.org/config/repository#repositoryImpl>
+			[
+				<http://www.openrdf.org/config/repository#repositoryType> "openrdf:SailRepository" ;
+				<http://www.openrdf.org/config/repository/sail#sailImpl>
+				[
+					<http://www.openrdf.org/config/sail#sailType> "ripple:LinkedDataSail" ;
+					<http://fortytwo.net/2012/02/linkeddata/config#mbeanName> "net.fortytwo.linkeddata:type=LinkedDataCache" ;
+					<http://fortytwo.net/2012/02/linkeddata/config#rdfizer> <rdfizer://www.ipni.org/> ;
+					<http://www.openrdf.org/config/sail#delegate>
+					[
+						<http://www.openrdf.org/config/sail#sailType> "openrdf:NativeStore" ;
+						<http://www.openrdf.org/config/sail/native#tripleIndexes> "spoc,posc"
+					]
+				] ;
+			] ;
+			<http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.openrdf.org/config/repository#Repository> ;
+			<http://www.w3.org/2000/01/rdf-schema#label> ?label
+		] .
+		<rdfizer://www.ipni.org/> <http://fortytwo.net/2012/02/linkeddata/config#contentType> <http://www.iana.org/assignments/media-types/text/xml> .
+		<rdfizer://www.ipni.org/> <http://fortytwo.net/2012/02/linkeddata/config#rdfFormat> <http://www.iana.org/assignments/media-types/application/rdf+xml> .
+	}
+}
+where {
+	bind(<_:mexilandia> as ?g)
+	bind("mexilandia" as ?id)
+	bind("Mexilandia" as ?label)
+}
